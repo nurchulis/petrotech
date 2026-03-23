@@ -36,7 +36,7 @@ return [
     ],
 
     'guacamole' => [
-        'url'  => env('GUACAMOLE_URL', 'http://localhost:8080/guacamole'),
+        'url' => env('GUACAMOLE_URL', 'http://localhost:8080/guacamole'),
         'user' => env('GUACAMOLE_USER', 'guacadmin'),
         'pass' => env('GUACAMOLE_PASS', 'guacadmin'),
     ],
