@@ -4,6 +4,11 @@
 
 ```
 Browser ──HTTP──► Nginx (prod) / artisan serve (dev)
+                              │
+                         [localhost:8080]
+                      Guacamole Web (Docker)
+                              │
+                           guacd (Docker) ──RDP──► Windows VMs
                       │
                       ▼
                Laravel 12 Application
@@ -29,7 +34,8 @@ Browser ──HTTP──► Nginx (prod) / artisan serve (dev)
                    ▼
               Services Layer
     ┌───────────────────────────────────────┐
-    │  VDI\VdiSessionService                │
+   │  VDI\\VdiSessionService                │
+   │  VDI\\GuacamoleService  ← NEW          │
     │  License\LicenseService               │
     │  Ticketing\TicketService              │
     │  Storage\StorageMetricService         │
@@ -99,7 +105,8 @@ petrotech/
 │   │   ├── License/LicenseService.php
 │   │   ├── Storage/StorageMetricService.php
 │   │   ├── Ticketing/TicketService.php
-│   │   ├── VDI/VdiSessionService.php
+│   │   ├── VDI/VdiSessionService.php     ← dual-mode connect/terminate
+│   │   ├── VDI/GuacamoleService.php      ← NEW: Guacamole REST API client
 │   │   └── VmMonitoring/VmMetricService.php
 │   └── View/Components/
 │       ├── AppLayout.php
@@ -111,7 +118,7 @@ petrotech/
 ├── resources/views/
 │   ├── layouts/app.blade.php   ← Main layout (sidebar, topbar, @stack('scripts'))
 │   ├── dashboard.blade.php
-│   ├── vdi/                    ← index, show, rdp
+│   ├── vdi/                    ← index, show, rdp, rdp-guacamole (NEW)
 │   ├── tickets/                ← index, create, show
 │   ├── licenses/               ← index, show, create, edit
 │   ├── vm-monitoring/          ← index, show
@@ -128,11 +135,17 @@ petrotech/
 ## Module Responsibilities
 
 ### VDI Module
-Files: `VdiController`, `VdiSessionService`, `Vm`, `VdiSession` models  
+Files: `VdiController`, `VdiSessionService`, `GuacamoleService`, `Vm`, `VdiSession` models  
 - Displays available VMs with real-time status
-- Creates VDI sessions (connect), tracks duration, terminates sessions
-- `rdp.blade.php` renders OS-aware fullscreen desktop simulation (Windows 11 or Linux/GNOME)
-- Buttons use `fetch()` POST + `window.open('_blank')` to open RDP in new tab
+- Supports **dual-mode** per VM controlled by `is_dummy` flag:
+  - `is_dummy = true` → legacy OS-aware fullscreen desktop simulation (`rdp.blade.php`)
+  - `is_dummy = false` → real RDP via Apache Guacamole (`rdp-guacamole.blade.php`)
+- `GuacamoleService` handles REST API: authenticate, create/delete connections, build iframe URL
+- `VdiSessionService::connect()` branches on `is_dummy`, stores `guacamole_connection_id` for real sessions
+- `terminate()` calls Guacamole API to delete the connection before marking session closed
+- RDP passwords stored **encrypted** via Laravel `Crypt::encryptString()` — decrypted only at model accessor level
+- Guacamole runs in Docker (`docker-compose.guacamole.yml`), separate from the Laravel stack
+- Guacamole connects to local PostgreSQL DB (`guacamole_db`) via `host.docker.internal`
 
 ### License Management Module
 Files: `LicenseController`, `LicenseService`, `License`, `LicenseServer`, `LicenseLog` models  

@@ -71,15 +71,23 @@ Virtual machines available for VDI access.
 | status | varchar(50) | "running", "stopped", "maintenance" |
 | assigned_user_id | bigint FK → users | nullable — dedicated user |
 | notes | text | nullable |
+| **is_dummy** | boolean | default `true` — legacy sim mode; set `false` for real RDP |
+| **rdp_host** | varchar | nullable — RDP target hostname or IP |
+| **rdp_port** | int | default 3389 |
+| **rdp_username** | varchar | nullable |
+| **rdp_password** | text | nullable — **stored encrypted** via `Crypt::encryptString()` |
 | created_at / updated_at | timestamp | |
 
 Accessor: `status_badge` → Bootstrap color class based on status.  
-Method: `latestMetricData()` → returns latest `VmMetric` row (not a relation).
+Accessor: `rdp_password` → auto-encrypts on set, auto-decrypts on get (never stored plain text).  
+Method: `latestMetricData()` → returns latest `VmMetric` row (not a relation).  
+Scope: `scopeRealRdp()` → filters `is_dummy = false` VMs.  
+Helper: `Vm::rdpValidationRules()` → returns conditional validation rules for use in Form Requests.
 
 ---
 
 ### `vdi_sessions`
-Tracks RDP/SSH session lifecycle.
+Tracks RDP/SSH session lifecycle for both dummy and real Guacamole sessions.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -87,16 +95,21 @@ Tracks RDP/SSH session lifecycle.
 | vm_id | bigint FK → vms | CASCADE DELETE |
 | user_id | bigint FK → users | CASCADE DELETE |
 | protocol | varchar(20) | default "RDP" |
-| status | varchar(50) | "active", "terminated" |
-| session_token | varchar UNIQUE | nullable |
-| connected_at | timestamp | Session start |
-| disconnected_at | timestamp | nullable — set on terminate |
+| status | varchar(50) | `connecting`, `active`, `closed`, `failed`, `terminated` (legacy) |
+| session_token | varchar UNIQUE | nullable — legacy dummy sessions |
+| connected_at | timestamp | Session start (legacy) |
+| disconnected_at | timestamp | nullable — legacy end time |
 | duration_minutes | int | nullable — `(int) abs(diff)` |
+| **guacamole_connection_id** | varchar | nullable — Guacamole connection ID from REST API |
+| **started_at** | timestamp | nullable — real session start time |
+| **ended_at** | timestamp | nullable — real session end time |
 | created_at / updated_at | timestamp | |
 
 **Indexes:** `(vm_id, status)`, `(user_id, connected_at)`
 
-Method: `terminate()` — sets status, records disconnected_at, calculates duration as `(int) abs()`.
+Constants: `STATUS_CONNECTING`, `STATUS_ACTIVE`, `STATUS_CLOSED`, `STATUS_FAILED`, `STATUS_TERMINATED`  
+Scope: `scopeGuacamole()` → filters sessions that have a `guacamole_connection_id`  
+Method: `terminate()` — calls Guacamole API to delete connection (if real), then sets status + end time.
 
 ---
 
