@@ -51,6 +51,11 @@ MAIL_HOST=smtp.internal.pertamina.com
 MAIL_PORT=587
 MAIL_FROM_ADDRESS=noreply@pertamina.com
 MAIL_FROM_NAME="Petrotechnical Platform"
+
+# Guacamole (Apache Guacamole for real RDP sessions)
+GUACAMOLE_URL=http://localhost:8080/guacamole
+GUACAMOLE_USER=guacadmin
+GUACAMOLE_PASS=<guacamole_admin_password>
 ```
 
 ---
@@ -314,4 +319,33 @@ php artisan tinker --execute="echo DB::connection()->getPdo() ? 'DB OK' : 'DB FA
 
 # Tail application logs
 tail -f storage/logs/laravel.log
+
+# Verify Guacamole is running
+curl -s http://localhost:8080/guacamole/api/languages | head -c 50
 ```
+
+---
+
+## Apache Guacamole Setup (Docker)
+
+Guacamole runs separately from the Laravel stack. It manages real RDP connections.
+
+```bash
+# Start Guacamole services (run once)
+docker compose -f docker-compose.guacamole.yml up -d
+
+# Initialize Guacamole PostgreSQL schema (first time only)
+docker run --rm --platform linux/amd64 guacamole/guacamole \
+  /opt/guacamole/bin/initdb.sh --postgresql > initdb.sql
+psql -U postgres -h 127.0.0.1 -c "CREATE DATABASE guacamole_db;"
+psql -U postgres -h 127.0.0.1 -d guacamole_db -f initdb.sql
+
+# Verify
+docker logs guacamole --tail 10
+```
+
+Guacamole is accessible at: `http://localhost:8080/guacamole`  
+Default admin: `guacadmin` / `guacadmin` — **change immediately in production.**
+
+> **Note:** On Apple Silicon (M1/M2), always use `--platform linux/amd64` for Guacamole images.  
+> On Linux hosts, add `extra_hosts: ["host.docker.internal:host-gateway"]` to the compose file.

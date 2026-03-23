@@ -1,15 +1,11 @@
-version: '3.9'
-
 services:
 
   guacd:
     image: guacamole/guacd
     container_name: guacd
     restart: unless-stopped
-    ports:
-      - "4822:4822"
     networks:
-      - guacamole_net
+      - petrotech_petrotech
 
   guacamole:
     image: guacamole/guacamole
@@ -23,16 +19,15 @@ services:
       GUACD_HOSTNAME: guacd
       GUACD_PORT: "4822"
 
-      # Points to local PostgreSQL on the host machine
-      # Must use POSTGRESQL_ prefix — Guacamole maps postgresql-* props to POSTGRESQL_* env vars
-      POSTGRESQL_HOSTNAME: host.docker.internal
+      # Connects to the Dockerized PostgreSQL via shared Docker network
+      POSTGRESQL_HOSTNAME: postgres
       POSTGRESQL_PORT: "5432"
       POSTGRESQL_DATABASE: guacamole_db
       POSTGRESQL_USERNAME: postgres
       POSTGRESQL_PASSWORD: "1234"
     networks:
-      - guacamole_net
+      - petrotech_petrotech
 
 networks:
-  guacamole_net:
-    driver: bridge
+  petrotech_petrotech:
+    external: true

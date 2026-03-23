@@ -3,157 +3,322 @@
 ![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.5-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ---
 
-## 1. Project Overview
-The **Petrotechnical Platform UC2** is an internal cloud infrastructure management platform developed for **Pertamina UC2** (an upstream oil and gas subsidiary). 
-The platform centralizes the management and monitoring of critical engineering infrastructure, providing Virtual Desktop Infrastructure (VDI) access, tracking expensive software licenses (like Petrel, Eclipse, Kingdom), monitoring VM telemetry and storage capacity, and providing an internal IT ticketing system.
+## 1. Overview
 
-## 2. Architecture Overview
-The platform uses a **Modular Monolith** architecture built on Laravel 12.
-- **Controllers**: Thin controllers are responsible for HTTP validation, explicit policy authorization, and calling services. No business logic resides here.
-- **Services (Domain Logic)**: Fat service classes (`App\Services\...`) encapsulate all business operations, returning clean arrays or DTOs to controllers.
-- **Models (Eloquent)**: Strictly focused on data structure, relationships, casts, and query scopes.
-- **Routing & Middleware**: Routes are grouped by access level (e.g., `admin.*`). Authorization is handled via Spatie `laravel-permission`.
-- **Frontend**: Blade templates extended from a Tabler UI base. Charting is done natively using ApexCharts.
+**Petrotechnical Platform UC2** is an internal cloud infrastructure management platform for **Pertamina UC2**. It provides:
 
-## 3. Technology Stack
-- **Backend Framework:** Laravel 12.54.1 (PHP 8.5)
-- **Database:** PostgreSQL 18
-- **Authentication:** Laravel Breeze (Session-based)
-- **Authorization:** Spatie `laravel-permission` (Roles: `user`, `admin`, `super_admin`)
-- **Activity Logging:** Spatie `laravel-activitylog`
-- **Frontend:** Vanilla HTML/CSS/JS + Tabler UI (Bootstrap 5 base)
-- **Charts:** ApexCharts 3.44 (CDN)
+- **VDI Access** — browser-based remote desktop sessions via Apache Guacamole (real RDP) or simulated desktop (dummy mode)
+- **License Management** — lifecycle tracking for engineering software licenses (Petrel, Eclipse, Kingdom)
+- **VM Monitoring** — real-time and historical CPU/Memory/GPU metrics
+- **Storage Monitoring** — 30-day capacity trends for NAS/SAN/Object storage
+- **Ticketing** — internal IT helpdesk with assignment and status workflows
+- **Analytics** — platform-wide KPI dashboard
 
-## 4. System Modules
+---
 
-### VDI Access
-Provides browser-based management of engineering workstations. Users can connect to running virtual machines. The module includes a simulated fullscreen Remote Desktop (RDP/SSH) view that automatically detects OS types (Windows 11 UI vs Linux/GNOME terminal UI).
+## 2. Architecture
 
-### License Management
-Lifecycle tracking for expensive engineering software licenses. It tracks license servers, expiry dates, and seat availability, recording all changes and check-outs via an activity log. Admin-only functionality.
+```
+Browser (HTTP)
+     │
+     ▼
+[Nginx Container] → [Laravel App Container]  ←→  [PostgreSQL Container]
+     │                       │                           │
+     │               GuacamoleService               (petrotech DB)
+     │               (REST API client)
+     │                       │
+     ▼                       ▼
+[Guacamole Container :8080] ←→ [guacd Container] ──RDP──► Windows Server
+             │
+     (guacamole_db in PostgreSQL)
+```
 
-### VM Monitoring
-Real-time and historical telemetry for virtual machines. Captures CPU, memory, Disk I/O, Network, and GPU utilization. Displays 24-hour interactive trend charts for each VM.
+**Docker network:** All containers (Laravel, PostgreSQL, Guacamole, guacd) share the `petrotech_petrotech` network.  
+Inter-container communication uses **container names** as hostnames — never `localhost` or `host.docker.internal`.
 
-### Storage Monitoring
-Monitors capacity and usage trends of NAS, SAN, and Object Storage devices. Captures historical storage snapshots to provide 30-day capacity trends and remaining free space analytics.
+| Container | Hostname (in network) | Port |
+|---|---|---|
+| `petrotech-app-1` | `app` | — |
+| `petrotech-postgres-1` | `postgres` | 5432 |
+| `guacamole` | `guacamole` | 8080 |
+| `guacd` | `guacd` | 4822 |
 
-### Ticketing System
-Internal IT helpdesk tailored for the platform. Supports ticket creation, assignment, priority levels, and open/in_progress/resolved/closed workflows. Features internal notes for admins.
+### VDI Dual-Mode
 
-### Analytics & Reporting
-Platform-wide executive dashboard aggregating operational KPIs. Provides insights into active VDI sessions, expiring licenses, ticket queue health, and overall VM/Storage utilization over different time periods.
+| Mode | `is_dummy` | Behaviour |
+|---|---|---|
+| Dummy | `true` | Fullscreen OS simulation (no infrastructure required) |
+| Real RDP | `false` | Live session via Guacamole REST API, embedded as iframe |
 
-## 5. Installation Guide
-Follow these steps to run the project locally on your machine.
+RDP passwords are stored **encrypted** using `Crypt::encryptString()` and decrypted only at the model accessor level.
 
-### Prerequisites
-- PHP 8.2+ (8.5 Recommended)
-- Composer 2.x
-- PostgreSQL 14+ (18 Recommended)
+### Technology Stack
 
-### Steps
-1. Clone the repository:
-   ```bash
-   git clone <repository_url>
-   cd petrotech
-   ```
-2. Install PHP dependencies:
-   ```bash
-   composer install
-   ```
-3. Create environment file:
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
-4. Set up the database (see Database Setup below) and update your `.env` file credentials.
-5. Create storage symlink:
-   ```bash
-   php artisan storage:link
-   ```
-6. Serve the application:
-   ```bash
-   php artisan serve
-   ```
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12 (PHP 8.5) |
+| Database | PostgreSQL 18 |
+| Auth | Laravel Breeze (session-based) |
+| Authorization | Spatie `laravel-permission` (roles: `user`, `admin`, `super_admin`) |
+| Activity Log | Spatie `laravel-activitylog` |
+| Frontend | Tabler UI + ApexCharts |
+| RDP Gateway | Apache Guacamole (Docker) |
 
-## 6. Docker Setup
-You can optionally run this platform using Docker environments (`docker-compose.yml`).
+---
 
-1. Build and start the containers:
-   ```bash
-   docker-compose up -d --build
-   ```
-2. The application will be accessible at `localhost` (Port 80/443).
-3. Run initialization commands inside the app container:
-   ```bash
-   docker-compose exec app composer install
-   docker-compose exec app php artisan key:generate
-   docker-compose exec app php artisan migrate --seed
-   ```
+## 3. Docker Setup
 
-## 7. Environment Configuration
-Required variables in `.env`:
+### 3.1 Laravel Stack
+
+```bash
+docker compose up -d --build
+```
+
+Starts: `app`, `nginx`, `postgres`, `redis`.
+
+Run first-time setup inside the app container:
+
+```bash
+docker compose exec app composer install --no-dev --optimize-autoloader
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan storage:link
+```
+
+### 3.2 Guacamole Stack
+
+Guacamole runs in a **separate compose file** and joins the same Docker network.
+
+```bash
+# Start Guacamole services
+docker compose -f docker-compose.guacamole.yml up -d
+```
+
+**`docker-compose.guacamole.yml` key config:**
+
+```yaml
+environment:
+  GUACD_HOSTNAME: guacd          # guacd container name
+  POSTGRESQL_HOSTNAME: postgres  # PostgreSQL container name (same network)
+  POSTGRESQL_DATABASE: guacamole_db
+  POSTGRESQL_USERNAME: postgres
+  POSTGRESQL_PASSWORD: "1234"
+networks:
+  - petrotech_petrotech           # shared external network
+```
+
+> ⚠️ `POSTGRESQL_HOSTNAME` must be the **container name** (`postgres`), not `localhost` or `host.docker.internal`.
+
+---
+
+## 4. Database Setup
+
+### 4.1 Laravel Database
+
+The `petrotech` database is created automatically by the PostgreSQL container. Run migrations:
+
+```bash
+docker compose exec app php artisan migrate --seed
+```
+
+### 4.2 Guacamole Database (first time only)
+
+```bash
+# Generate schema SQL (use --platform linux/amd64 on Apple Silicon)
+docker run --rm --platform linux/amd64 guacamole/guacamole \
+  /opt/guacamole/bin/initdb.sh --postgresql > initdb.sql
+
+# Create the Guacamole database
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE guacamole_db;"
+
+# Import schema
+docker compose exec -T postgres psql -U postgres -d guacamole_db < initdb.sql
+```
+
+Verify:
+
+```bash
+docker compose exec postgres psql -U postgres -d guacamole_db -c "\dt"
+# Should list ~20 guacamole_* tables
+```
+
+---
+
+## 5. Laravel Configuration
+
+### `.env` (required variables)
+
 ```dotenv
 APP_NAME="Petrotechnical Platform"
-APP_ENV=local
-APP_KEY=...
-APP_DEBUG=true
-APP_URL=http://localhost:8000
+APP_ENV=production
+APP_KEY=base64:...
+APP_DEBUG=false
+APP_URL=http://SERVER_IP
 
 DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
+DB_HOST=postgres          # container name, not localhost
 DB_PORT=5432
 DB_DATABASE=petrotech
-DB_USERNAME=mac
+DB_USERNAME=postgres
 DB_PASSWORD=1234
+
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+# Apache Guacamole
+GUACAMOLE_URL=http://SERVER_IP:8080/guacamole
+GUACAMOLE_USERNAME=guacadmin
+GUACAMOLE_PASSWORD=guacadmin
 ```
-*Note: Ensure `DB_CONNECTION` is set to `pgsql` since features (e.g. JSONB) rely on PostgreSQL.*
 
-## 8. Database Setup
-1. Create a `petrotech` database in PostgreSQL.
-2. Run database migrations to construct the normalized tables:
-   ```bash
-   php artisan migrate
-   ```
-3. Run the application seeders to populate initial roles, users, VMs, and mock metrics:
-   ```bash
-   php artisan db:seed
-   ```
-   *Note: Default users and roles (e.g. `super_admin`) are generated by `RoleSeeder` and `UserSeeder`.*
+### `config/services.php`
 
-## 9. Development Workflow
-* **Code Conventions**: Follow guidelines in `ai/coding_rules.md`. Thin controllers, fat services.
-* **Database Changes**: Always create additive migrations. Never edit previously run migration files. Avoid MySQL-specific syntax.
-* **Branching**: Use `feature/module-name`, `fix/issue-name` branching structure. Never work directly on `main`.
-* **Testing**: Monitor server logs and browser console (for chart errors) when making Blade template changes.
+```php
+'guacamole' => [
+    'url'      => env('GUACAMOLE_URL'),
+    'username' => env('GUACAMOLE_USERNAME'),
+    'password' => env('GUACAMOLE_PASSWORD'),
+],
+```
 
-## 10. Deployment Guide
-For production environments (Ubuntu/Nginx/PHP-FPM):
-1. **Nginx**: Configure SSL and map root to `/public`.
-2. **PHP-FPM**: Ensure `php-pgsql` extension is enabled. Configure memory limit to `256M` and upload limit to `50M`.
-3. **Optimizations**:
-   ```bash
-   composer install --optimize-autoloader --no-dev
-   php artisan config:cache
-   php artisan route:cache
-   php artisan view:cache
-   ```
-4. Set correct permissions: 
-   ```bash
-   chown -R www-data:www-data storage bootstrap/cache
-   ```
+> ⚠️ Keys must be `username`/`password` — not `user`/`pass`. `GuacamoleService` reads these exact keys.
 
-## 11. Monitoring and Logging
-* **Infrastructure**: It's highly recommended to monitor the host servers using Prometheus (Node Exporter, Postgres Exporter) and Grafana.
-* **Application Metrics**: Monitor active VDI sessions and expiring licenses via the internal Analytics dashboard, and consider creating a `/metrics` endpoint to expose these to Prometheus.
-* **Logs**: Laravel daily logs are stored in `storage/logs/`. Nginx access and error logs should be aggregated using Promtail/Loki or ELK.
+---
 
-## 12. Future Improvements
-* **Real Telemetry Ingestion**: Replace the seeded/mocked VM and storage metrics with an API endpoint (`POST /api/metrics`) to ingest real stats from hypervisors or Telegraf agents.
-* **SSO Integration**: Integrate with Microsoft Entra ID (Azure AD) or Okta via SAML/OAuth2 instead of using local database credentials.
-* **Ticket SLAs**: Add tracking for response and resolution SLAs inside the Ticketing module, integrated with business hours.
-* **Automated Provisioning**: Allow supervisors to request new VDI instances that automatically trigger Ansible/Terraform scripts to spin up VMs dynamically.
+## 6. Deployment
+
+### Initial Deployment
+
+```bash
+# 1. Start Laravel stack
+docker compose up -d --build
+
+# 2. Install dependencies & initialize
+docker compose exec app composer install --no-dev --optimize-autoloader
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan storage:link
+
+# 3. Initialize Guacamole DB (first time only — see Section 4.2)
+
+# 4. Start Guacamole stack
+docker compose -f docker-compose.guacamole.yml up -d
+```
+
+### Updating the Application
+
+```bash
+git pull origin main
+
+docker compose exec app composer install --no-dev --optimize-autoloader
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan optimize:clear
+
+# Restart the container — required to clear PHP opcode cache and config cache
+docker compose restart app
+```
+
+> **Why restart?** Laravel caches config and routes in memory (opcache). Without a container restart, updated `.env` values and new code are not picked up reliably.
+
+---
+
+## 7. Usage — VDI Flow
+
+### Setting up a Real RDP VM
+
+```bash
+docker compose exec app php artisan tinker
+```
+
+```php
+App\Models\Vm::create([
+    'vm_name'          => 'Win-Server-2022',
+    'os_type'          => 'Windows Server 2022',
+    'application_name' => 'Remote Desktop',
+    'status'           => 'running',
+    'is_dummy'         => false,
+    'rdp_host'         => '103.23.198.194',   // actual VM IP
+    'rdp_port'         => 3389,
+    'rdp_username'     => 'administrator',
+    'rdp_password'     => 'your_password',    // auto-encrypted by model
+    'region'           => 'Cloud',
+]);
+```
+
+### Connection Flow
+
+1. User visits `/vdi` → selects a running VM
+2. Clicks **Connect** → `POST /vdi/{vm}/connect`
+3. `GuacamoleService` authenticates with Guacamole REST API → creates RDP connection → stores `guacamole_connection_id` in `vdi_sessions`
+4. Browser opens `/vdi/{vm}/rdp` → Guacamole client loads in iframe
+5. User clicks **Disconnect** → `POST /vdi/sessions/{session}/terminate` → connection deleted from Guacamole → session marked `closed`
+
+---
+
+## 8. Testing
+
+After setting up a real VM record:
+
+1. Browse to `http://SERVER_IP/vdi`
+2. Click on the VM → click **Connect**
+3. A new tab opens with the Guacamole iframe
+
+**Verify in database:**
+
+```bash
+docker compose exec app php artisan tinker --execute="
+\$s = App\Models\VdiSession::latest()->first();
+echo 'Status: ' . \$s->status . PHP_EOL;
+echo 'guacamole_connection_id: ' . \$s->guacamole_connection_id . PHP_EOL;
+"
+```
+
+Expected output:
+```
+Status: connecting
+guacamole_connection_id: 3
+```
+
+**Verify in Guacamole UI:**  
+Browse to `http://SERVER_IP:8080/guacamole` → login as `guacadmin` → the connection should appear under **Active Connections**.
+
+**Verify RDP works:**  
+The Guacamole iframe should show the Windows desktop within 5–10 seconds.
+
+---
+
+## 9. Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `Cannot authenticate with Guacamole` | Wrong `GUACAMOLE_URL`, `USERNAME`, or `PASSWORD` | Check `.env`, ensure keys are `GUACAMOLE_USERNAME`/`GUACAMOLE_PASSWORD`. Clear config cache: `php artisan optimize:clear` + restart container |
+| `Invalid Login` in Guacamole UI | Guacamole not connected to PostgreSQL | Verify `POSTGRESQL_HOSTNAME=postgres` in compose, confirm `guacamole_db` schema is imported |
+| `Config cache stale` | Old cached config still in use | Run `docker compose exec app php artisan optimize:clear` then `docker compose restart app` |
+| Connection created but RDP login fails | Wrong `rdp_username`/`rdp_password` for the target VM | Verify credentials with a native RDP client first |
+| `guacamole_connection_id` is null | Connect button not hitting real-mode path | Ensure `is_dummy = false` on the VM record |
+| `host.docker.internal` resolution fails | Linux Docker host | Never use `host.docker.internal` — use container names via shared Docker network instead |
+| Guacamole iframe blank / 404 | Wrong `GUACAMOLE_URL` — missing `/guacamole` suffix | Set `GUACAMOLE_URL=http://SERVER_IP:8080/guacamole` (with `/guacamole`) |
+
+---
+
+## 10. Development Workflow
+
+- **Code Conventions**: Follow `ai/coding_rules.md`. Thin controllers, fat services.
+- **Database Changes**: Always create additive migrations. Never edit previously run files. PostgreSQL only — avoid MySQL-specific syntax.
+- **Branching**: `feature/module-name`, `fix/issue-name`. Never commit directly to `main`.
+- **AI Context**: All architecture, ERD, deployment, and coding rules are documented in `ai/`.
+
+---
+
+## 11. Future Improvements
+
+- **Real Telemetry Ingestion**: Replace seeded metrics with a `POST /api/metrics` endpoint from hypervisors or Telegraf agents.
+- **SSO Integration**: Replace local credentials with Microsoft Entra ID / Okta via SAML/OAuth2.
+- **Ticket SLAs**: Response and resolution SLA tracking with business-hours awareness.
+- **Automated Provisioning**: Supervisor-triggered VM provisioning via Ansible/Terraform.
+- **Guacamole SSO**: Pass Laravel-signed tokens to Guacamole to eliminate separate `guacadmin` credentials in production.
