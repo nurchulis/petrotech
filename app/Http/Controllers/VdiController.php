@@ -10,7 +10,9 @@ use Illuminate\View\View;
 
 class VdiController extends Controller
 {
-    public function __construct(private VdiSessionService $service) {}
+    public function __construct(private VdiSessionService $service)
+    {
+    }
 
     public function index(): View
     {
@@ -41,17 +43,29 @@ class VdiController extends Controller
     public function rdp(Vm $vm): View
     {
         abort_if($vm->status !== 'running', 403, 'VM is not running.');
+
         $session = VdiSession::where('vm_id', $vm->id)
             ->where('user_id', auth()->id())
-            ->where('status', 'active')
+            ->whereIn('status', [VdiSession::STATUS_ACTIVE, VdiSession::STATUS_CONNECTING])
             ->latest('connected_at')
             ->first();
+
+        // Real RDP via Guacamole iframe
+        if (!$vm->is_dummy && $session?->guacamole_connection_id) {
+            $clientUrl = $this->service->getGuacamoleClientUrl($session);
+            return view('vdi.rdp-guacamole', compact('vm', 'session', 'clientUrl'));
+        }
+
+        // Dummy simulation
         return view('vdi.rdp', compact('vm', 'session'));
     }
 
     public function terminate(VdiSession $session): RedirectResponse
     {
-        abort_if($session->user_id !== auth()->id() && !auth()->user()->hasRole(['admin', 'super_admin']), 403);
+        abort_if(
+            $session->user_id !== auth()->id() && !auth()->user()->hasRole(['admin', 'super_admin']),
+            403
+        );
         $this->service->terminate($session);
         return back()->with('success', 'VDI session terminated.');
     }
