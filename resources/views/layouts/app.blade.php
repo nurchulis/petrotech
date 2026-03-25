@@ -182,6 +182,22 @@
                         </li>
 
                         <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.vm-management.*') ? 'active' : '' }}"
+                                href="{{ route('admin.vm-management.index') }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                                        <line x1="6" y1="6" x2="6.01" y2="6" />
+                                        <line x1="6" y1="18" x2="6.01" y2="18" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title">VM Management</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.storage.*') ? 'active' : '' }}"
                                 href="{{ route('admin.storage.index') }}">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -210,10 +226,58 @@
                                 <span class="nav-link-title">Analytics &amp; Reports</span>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
+                                href="{{ route('admin.groups.index') }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title">Group Management</span>
+                            </a>
+                        </li>
+
+
+                        @endrole
+
+                        @role(['admin','super_admin'])
+                        <li class="nav-item"><span class="nav-section-title">System</span></li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                                href="{{ route('admin.users.index') }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title">User Management</span>
+                            </a>
+                        </li>
                         @endrole
 
                         @role('super_admin')
-                        <li class="nav-item"><span class="nav-section-title">System</span></li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
+                                href="{{ route('admin.roles.index') }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title">Role Management</span>
+                            </a>
+                        </li>
+
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}"
                                 href="{{ route('settings.index') }}">
@@ -271,20 +335,20 @@
 
             {{-- Flash Messages --}}
             @if(session('success'))
-                <div class="container-xl pt-3">
-                    <div class="alert alert-success alert-dismissible">
-                        ✓ {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+            <div class="container-xl pt-3">
+                <div class="alert alert-success alert-dismissible">
+                    ✓ {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+            </div>
             @endif
             @if(session('error'))
-                <div class="container-xl pt-3">
-                    <div class="alert alert-danger alert-dismissible">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+            <div class="container-xl pt-3">
+                <div class="alert alert-danger alert-dismissible">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+            </div>
             @endif
 
             <div class="page-body">

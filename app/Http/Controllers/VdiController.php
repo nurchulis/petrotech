@@ -5,19 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\Vm;
 use App\Models\VdiSession;
 use App\Services\VDI\VdiSessionService;
+use App\Services\VDI\VdiAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class VdiController extends Controller
 {
-    public function __construct(private VdiSessionService $service)
-    {
-    }
+    public function __construct(
+        private VdiSessionService $service,
+        private VdiAccessService $accessService,
+    ) {}
 
     public function index(): View
     {
-        $vms = Vm::with('assignedUser')->orderBy('status', 'desc')->orderBy('region')->get();
-        $activeSessions = $this->service->getUserSessions(auth()->user());
+        $user = auth()->user();
+
+        // Admins see all VMs, regular users see only accessible VMs
+        if ($user->hasRole(['admin', 'super_admin'])) {
+            $vms = Vm::with('assignedUser')->orderBy('status', 'desc')->orderBy('region')->get();
+        } else {
+            $vms = $this->accessService->getAccessibleVms($user);
+        }
+
+        $activeSessions = $this->service->getUserSessions($user);
         return view('vdi.index', compact('vms', 'activeSessions'));
     }
 
