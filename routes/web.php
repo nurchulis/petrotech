@@ -76,12 +76,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('vm-management', VmManagementController::class)
                     ->parameters(['vm-management' => 'vm']);
 
-                Route::resource('users', UserController::class);
-
-                // VM Management (CRUD)
-                Route::resource('vm-management', VmManagementController::class)
-                    ->parameters(['vm-management' => 'vm']);
-
             }
             );
 
