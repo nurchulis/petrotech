@@ -68,13 +68,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Analytics & Reports
                 Route::get('/analytics', [AnalyticsController::class , 'index'])->name('analytics.index');
-                Route::resource('users', UserController::class)->except(['show']);
+                Route::resource('users', UserController::class);
             }
             );
 
             // ── RBAC: Role Management (super_admin only) ─────────────────────────
             Route::middleware('role:super_admin')->prefix('admin')->name('admin.')->group(function () {
-            Route::resource('roles', RoleController::class)->except(['show']);
+            Route::resource('roles', RoleController::class);
         }
         );
 

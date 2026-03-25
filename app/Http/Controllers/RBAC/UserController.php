@@ -52,6 +52,13 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
     }
 
+    public function show(User $user): View
+    {
+        $this->authorize('view', $user);
+        $user->load('roles');
+        return view('rbac.users.show', compact('user'));
+    }
+
     public function edit(User $user): View
     {
         $this->authorize('update', $user);

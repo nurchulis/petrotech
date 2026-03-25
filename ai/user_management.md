@@ -26,9 +26,9 @@ Create a production-ready module to manage:
 * Display user and roles
 * Pagination, search, and filter
 
-#### 3. Access Control
+  #### 3. Access Control
 
-* Only super_admin can manage roles
+  * Only super_admin can manage roles
 * Only admin and super_admin can manage users
 
 ---
@@ -62,8 +62,8 @@ Also include:
 
 ### 🎨 UI Pages
 
-* Users List + Create/Edit/Delete
-* Roles List + Create/Edit/Delete
+* Users List + Create/Edit/Delete/View
+* Roles List + Create/Edit/Delete/View
 
 Use reusable Blade components.
 
