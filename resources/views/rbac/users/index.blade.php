@@ -75,6 +75,7 @@
                     </td>
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
+                            <a href="{{ route('admin.users.show', $user) }}" class="btn btn-outline-secondary">View</a>
                             @can('update', $user)
                             <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary">Edit</a>
                             @endcan
