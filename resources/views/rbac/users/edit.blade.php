@@ -36,18 +36,21 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Employee ID</label>
-                    <input type="text" name="employee_id" class="form-control"
+                    <input type="text" name="employee_id" class="form-control @error('employee_id') is-invalid @enderror"
                            value="{{ old('employee_id', $user->employee_id) }}">
+                    @error('employee_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Department</label>
-                    <input type="text" name="department" class="form-control"
+                    <input type="text" name="department" class="form-control @error('department') is-invalid @enderror"
                            value="{{ old('department', $user->department) }}">
+                    @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Phone</label>
-                    <input type="text" name="phone" class="form-control"
+                    <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
                            value="{{ old('phone', $user->phone) }}">
+                    @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Status</label>

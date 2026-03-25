@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\VmMonitorController;
 use App\Http\Controllers\Admin\StorageController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\VmManagementController;
+use App\Http\Controllers\Admin\GroupController;
+use App\Http\Controllers\Admin\VdiAccessController;
 use App\Http\Controllers\RBAC\UserController;
 use App\Http\Controllers\RBAC\RoleController;
 
@@ -76,6 +78,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('vm-management', VmManagementController::class)
                     ->parameters(['vm-management' => 'vm']);
 
+                // Group Management
+                Route::resource('groups', GroupController::class);
+                Route::post('groups/{group}/members', [GroupController::class, 'syncMembers'])->name('groups.members.sync');
+                Route::post('groups/{group}/vm-access', [GroupController::class, 'syncVmAccess'])->name('groups.vm-access.sync');
+
+                // VDI Access Management
+                Route::get('vdi-access/users/{user}', [VdiAccessController::class, 'userAccess'])->name('vdi-access.user');
+                Route::post('vdi-access/users/{user}', [VdiAccessController::class, 'syncUserAccess'])->name('vdi-access.user.sync');
             }
             );
 

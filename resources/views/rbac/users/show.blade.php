@@ -13,6 +13,7 @@
             {{ $user->is_active ? 'Active' : 'Inactive' }}
         </span>
         @can('update', $user)
+        <a href="{{ route('admin.vdi-access.user', $user) }}" class="btn btn-sm btn-outline-info">VM Access</a>
         <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a>
         @endcan
         <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">← Back</a>
