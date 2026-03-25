@@ -52,6 +52,7 @@
                     </td>
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
+                            <a href="{{ route('admin.roles.show', $role) }}" class="btn btn-outline-secondary">View</a>
                             @can('update', $role)
                             <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-outline-primary">Edit</a>
                             @endcan

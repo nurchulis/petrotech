@@ -73,14 +73,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // VM Management (CRUD)
                 Route::resource('vm-management', VmManagementController::class)
                     ->parameters(['vm-management' => 'vm']);
-
-                Route::resource('users', UserController::class)->except(['show']);
+               
+                Route::resource('users', UserController::class);
             }
             );
 
             // ── RBAC: Role Management (super_admin only) ─────────────────────────
             Route::middleware('role:super_admin')->prefix('admin')->name('admin.')->group(function () {
-            Route::resource('roles', RoleController::class)->except(['show']);
+            Route::resource('roles', RoleController::class);
         }
         );
 
