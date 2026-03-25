@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\LicenseController;
 use App\Http\Controllers\Admin\VmMonitorController;
 use App\Http\Controllers\Admin\StorageController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\VmManagementController;
 use App\Http\Controllers\RBAC\UserController;
 use App\Http\Controllers\RBAC\RoleController;
 
@@ -68,6 +69,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 // Analytics & Reports
                 Route::get('/analytics', [AnalyticsController::class , 'index'])->name('analytics.index');
+
+                // VM Management (CRUD)
+                Route::resource('vm-management', VmManagementController::class)
+                    ->parameters(['vm-management' => 'vm']);
+
                 Route::resource('users', UserController::class)->except(['show']);
             }
             );
