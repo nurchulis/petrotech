@@ -79,9 +79,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->parameters(['vm-management' => 'vm']);
 
                 // Group Management
-                Route::resource('groups', GroupController::class);
-                Route::post('groups/{group}/members', [GroupController::class, 'syncMembers'])->name('groups.members.sync');
-                Route::post('groups/{group}/vm-access', [GroupController::class, 'syncVmAccess'])->name('groups.vm-access.sync');
+                Route::resource('groups', GroupController::class)->except(['show']);
+                
+                Route::get('groups/{group}/members', [GroupController::class, 'members'])->name('groups.members');
+                Route::post('groups/{group}/members', [GroupController::class, 'addMember'])->name('groups.members.add');
+                Route::delete('groups/{group}/members/{user}', [GroupController::class, 'removeMember'])->name('groups.members.remove');
+                
+                Route::get('groups/{group}/vms', [GroupController::class, 'vms'])->name('groups.vms');
+                Route::post('groups/{group}/vms', [GroupController::class, 'addVm'])->name('groups.vms.add');
+                Route::delete('groups/{group}/vms/{vm}', [GroupController::class, 'removeVm'])->name('groups.vms.remove');
 
                 // VDI Access Management
                 Route::get('vdi-access/users/{user}', [VdiAccessController::class, 'userAccess'])->name('vdi-access.user');

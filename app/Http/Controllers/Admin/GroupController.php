@@ -15,10 +15,21 @@ class GroupController extends Controller
 {
     public function __construct(private VdiAccessService $accessService) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Group::class);
-        $groups = Group::withCount(['users', 'vms'])->orderBy('name')->paginate(15);
+        
+        $query = Group::withCount(['users', 'vms'])->orderBy('name');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $groups = $query->paginate(15)->withQueryString();
         return view('groups.index', compact('groups'));
     }
 
@@ -41,15 +52,6 @@ class GroupController extends Controller
         return redirect()->route('admin.groups.index')->with('success', 'Group created successfully.');
     }
 
-    public function show(Group $group): View
-    {
-        $this->authorize('view', $group);
-        $group->load(['users', 'vms']);
-        $allUsers = User::where('is_active', true)->orderBy('name')->get();
-        $allVms   = Vm::orderBy('vm_name')->get();
-        return view('groups.show', compact('group', 'allUsers', 'allVms'));
-    }
-
     public function edit(Group $group): View
     {
         $this->authorize('update', $group);
@@ -66,7 +68,7 @@ class GroupController extends Controller
         ]);
 
         $group->update($data);
-        return redirect()->route('admin.groups.show', $group)->with('success', 'Group updated.');
+        return redirect()->route('admin.groups.index')->with('success', 'Group updated.');
     }
 
     public function destroy(Group $group): RedirectResponse
@@ -76,35 +78,64 @@ class GroupController extends Controller
         return redirect()->route('admin.groups.index')->with('success', 'Group deleted.');
     }
 
-    /**
-     * Sync group members.
-     */
-    public function syncMembers(Request $request, Group $group): RedirectResponse
+    // ── Members Management ───────────────────────────────────────────────────
+
+    public function members(Group $group): View
     {
-        $this->authorize('update', $group);
-
-        $data = $request->validate([
-            'user_ids'   => 'nullable|array',
-            'user_ids.*' => 'exists:users,id',
-        ]);
-
-        $this->accessService->syncGroupMembers($group, $data['user_ids'] ?? []);
-        return redirect()->route('admin.groups.show', $group)->with('success', 'Members updated.');
+        $this->authorize('view', $group);
+        $members = $group->users()->orderBy('name')->paginate(15);
+        $availableUsers = User::where('is_active', true)
+            ->whereNotIn('id', $group->users()->pluck('users.id'))
+            ->orderBy('name')
+            ->get();
+        return view('groups.members', compact('group', 'members', 'availableUsers'));
     }
 
-    /**
-     * Sync group VM access.
-     */
-    public function syncVmAccess(Request $request, Group $group): RedirectResponse
+    public function addMember(Request $request, Group $group): RedirectResponse
     {
         $this->authorize('update', $group);
-
         $data = $request->validate([
-            'vm_ids'   => 'nullable|array',
-            'vm_ids.*' => 'exists:vms,id',
+            'user_ids'   => 'required|array|min:1',
+            'user_ids.*' => 'exists:users,id'
         ]);
+        $this->accessService->addMembersToGroup($group, $data['user_ids']);
+        return back()->with('success', 'Users added to group.');
+    }
 
-        $this->accessService->syncGroupVmAccess($group, $data['vm_ids'] ?? []);
-        return redirect()->route('admin.groups.show', $group)->with('success', 'VM access updated.');
+    public function removeMember(Group $group, User $user): RedirectResponse
+    {
+        $this->authorize('update', $group);
+        $this->accessService->removeMemberFromGroup($group, $user);
+        return back()->with('success', 'User removed from group.');
+    }
+
+    // ── VM Access Management ─────────────────────────────────────────────────
+
+    public function vms(Group $group): View
+    {
+        $this->authorize('view', $group);
+        $vms = $group->vms()->orderBy('vm_name')->paginate(15);
+        $availableVms = Vm::whereNotIn('id', $group->vms()->pluck('vms.id'))
+            ->orderBy('vm_name')
+            ->get();
+        return view('groups.vms', compact('group', 'vms', 'availableVms'));
+    }
+
+    public function addVm(Request $request, Group $group): RedirectResponse
+    {
+        $this->authorize('update', $group);
+        $data = $request->validate([
+            'vm_ids'   => 'required|array|min:1',
+            'vm_ids.*' => 'exists:vms,id'
+        ]);
+        $this->accessService->addVmsToGroup($group, $data['vm_ids']);
+        return back()->with('success', 'VMs added to group.');
+    }
+
+    public function removeVm(Group $group, Vm $vm): RedirectResponse
+    {
+        $this->authorize('update', $group);
+        $this->accessService->removeVmFromGroup($group, $vm);
+        return back()->with('success', 'VM removed from group.');
     }
 }

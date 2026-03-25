@@ -25,7 +25,7 @@
                 </div>
                 <div class="col-12 d-flex gap-2">
                     <button type="submit" class="btn" style="background:#1a3c6b;color:#fff">Update Group</button>
-                    <a href="{{ route('admin.groups.show', $group) }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('admin.groups.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </div>
         </form>
