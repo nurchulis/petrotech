@@ -67,7 +67,7 @@ class VdiAccessService
     }
 
     /**
-     * Sync VM access for a group.
+     * Sync VM access for a group (bulk).
      */
     public function syncGroupVmAccess(Group $group, array $vmIds): void
     {
@@ -75,10 +75,42 @@ class VdiAccessService
     }
 
     /**
-     * Sync members of a group.
+     * Sync members of a group (bulk).
      */
     public function syncGroupMembers(Group $group, array $userIds): void
     {
         $group->users()->sync($userIds);
+    }
+
+    /**
+     * Add multiple members to a group.
+     */
+    public function addMembersToGroup(Group $group, array $userIds): void
+    {
+        $group->users()->syncWithoutDetaching($userIds);
+    }
+
+    /**
+     * Remove a single member from a group.
+     */
+    public function removeMemberFromGroup(Group $group, User $user): void
+    {
+        $group->users()->detach($user->id);
+    }
+
+    /**
+     * Add multiple VMs to a group.
+     */
+    public function addVmsToGroup(Group $group, array $vmIds): void
+    {
+        $group->vms()->syncWithoutDetaching($vmIds);
+    }
+
+    /**
+     * Remove a single VM access from a group.
+     */
+    public function removeVmFromGroup(Group $group, Vm $vm): void
+    {
+        $group->vms()->detach($vm->id);
     }
 }

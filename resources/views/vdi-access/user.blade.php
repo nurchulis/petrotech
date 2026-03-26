@@ -22,7 +22,10 @@
             <div class="card-body">
                 <form method="POST" action="{{ route('admin.vdi-access.user.sync', $user) }}">
                     @csrf
-                    <div class="mb-3" style="max-height:350px;overflow-y:auto">
+                    <div class="mb-3">
+                        <input type="text" id="search-direct-vms" class="form-control form-control-sm" placeholder="Search VMs...">
+                    </div>
+                    <div class="mb-3" id="direct-vms-list" style="max-height:350px;overflow-y:auto">
                         @foreach($allVms as $vm)
                         <label class="form-check mb-1">
                             <input type="checkbox" name="vm_ids[]" value="{{ $vm->id }}"
@@ -69,4 +72,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const input = document.getElementById('search-direct-vms');
+        const list = document.getElementById('direct-vms-list');
+        if(input && list) {
+            input.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                const labels = list.querySelectorAll('label.form-check');
+                labels.forEach(label => {
+                    const text = label.textContent.toLowerCase();
+                    label.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>
 @endsection
