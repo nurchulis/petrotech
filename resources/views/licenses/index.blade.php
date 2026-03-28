@@ -16,6 +16,66 @@
         @endcan
     </div>
 
+    @php
+        // Fetch all vendors to calculate stats
+        $allVendors = \App\Models\Vendor::all();
+        $totalVendors = $allVendors->count();
+        $upVendors = $allVendors->where('status', 'enable')->count();
+        $downVendors = $allVendors->where('status', 'disable')->count();
+        $upPercentage = $totalVendors > 0 ? ($upVendors / $totalVendors) * 100 : 0;
+        $downPercentage = $totalVendors > 0 ? ($downVendors / $totalVendors) * 100 : 0;
+    @endphp
+
+    {{-- Server Status Infographic Card --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="overflow: hidden; background: #fff;">
+                <div class="row g-0">
+                    <div class="col-md-3 border-end">
+                        <div class="card-body text-center py-4">
+                            <div class="text-muted mb-2 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Server Status</div>
+                            <div class="h1 mb-1 fw-bold" style="color: #1a3c6b;">{{ number_format($upPercentage, 0) }}%</div>
+                            <div class="badge bg-success-lt text-success px-2 py-1">OPERATIONAL</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 border-end">
+                        <div class="card-body py-4 h-100 d-flex flex-column justify-content-center">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold text-dark small"><i class="fas fa-heartbeat me-1 text-primary"></i> Infrastructure Health Distribution</span>
+                                <span class="text-muted small">{{ $upVendors }} / {{ $totalVendors }} Vendors UP</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 12px; border-radius: 6px; background-color: #f1f5f9;">
+                                <div class="progress-bar bg-success" style="width: {{ $upPercentage }}%" data-bs-toggle="tooltip" title="UP: {{ $upVendors }} Vendors"></div>
+                                <div class="progress-bar bg-danger" style="width: {{ $downPercentage }}%" data-bs-toggle="tooltip" title="DOWN: {{ $downVendors }} Vendors"></div>
+                            </div>
+                            <div class="row g-2">
+                                 <div class="col-6">
+                                     <div class="d-flex align-items-center small text-muted">
+                                         <span class="status-dot status-dot-animated bg-success me-2 border-0 shadow-none"></span>
+                                         <span>Online: {{ number_format($upPercentage, 1) }}%</span>
+                                     </div>
+                                 </div>
+                                 <div class="col-6 text-end">
+                                     <div class="d-flex align-items-center justify-content-end small text-muted">
+                                         <span class="status-dot bg-danger me-2 border-0 shadow-none"></span>
+                                         <span>Offline: {{ number_format($downPercentage, 1) }}%</span>
+                                     </div>
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 bg-light-lt">
+                        <div class="card-body text-center py-4 h-100 d-flex flex-column justify-content-center">
+                            <div class="text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Total Assets</div>
+                            <div class="h2 mb-0 fw-bold text-dark">{{ $totalVendors }}</div>
+                            <div class="small text-muted">Registered Vendors</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Create Vendor Modal --}}
     <div class="modal modal-blur fade" id="createVendorModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
