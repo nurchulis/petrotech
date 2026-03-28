@@ -73,8 +73,8 @@ class DemoDataSeeder extends Seeder
         ]);
 
         // ─── Vendors ───────────────────────────────────────────────────────
-        $vendorLgcx = Vendor::create(['name' => 'lgcx', 'description' => 'LGCX Software', 'license_server_id' => $serverJKT->id]);
-        $vendorDaemon = Vendor::create(['name' => 'DAEMON', 'description' => 'Daemon Software', 'license_server_id' => $serverJKT->id]);
+        $vendorLgcx = Vendor::create(['name' => 'lgcx', 'description' => 'LGCX Software', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subMinutes(5)]);
+        $vendorDaemon = Vendor::create(['name' => 'DAEMON', 'description' => 'Daemon Software', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subHours(1)]);
 
         // ─── Licenses (Features) ──────────────────────────────────────────
         $licenses = [
@@ -206,7 +206,7 @@ class DemoDataSeeder extends Seeder
             'status' => 'active',
         ]);
 
-        $vendorLicsrv = Vendor::create(['name' => 'licsrv', 'description' => 'License Server Vendor', 'license_server_id' => $serverSBY->id]);
+        $vendorLicsrv = Vendor::create(['name' => 'licsrv', 'description' => 'License Server Vendor', 'license_server_id' => $serverSBY->id, 'status' => 'enable', 'last_updated' => now()->subDays(1)]);
 
         foreach ($additionalFeatures as $feat) {
             $vendorId = match ($feat['vendor']) {

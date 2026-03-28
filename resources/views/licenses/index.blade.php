@@ -2,6 +2,8 @@
 @section('title', 'License Management')
 @section('breadcrumb', 'Administration / License Management')
 
+
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -93,6 +95,7 @@
                     <th>Server</th>
                     <th class="text-center">Total Feature</th>
                     <th>Status (UP/DOWN)</th>
+                    <th>Last Update From Server</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
@@ -100,7 +103,14 @@
                 @forelse($vendors as $v)
                 <tr>
                     <td>
-                        <strong class="text-primary">{{ $v->name }}</strong>
+                        <div class="d-inline-flex align-items-center">
+                            @if($v->status == 'enable')
+                                <span class="status-dot status-dot-animated bg-success me-2"></span>
+                            @else
+                                <span class="status-dot bg-danger me-2"></span>
+                            @endif
+                            <strong class="text-primary">{{ $v->name }}</strong>
+                        </div>
                     </td>
                     <td>
                         <code>{{ optional($v->server)->port }}@ {{ optional($v->server)->server_name }}</code>
@@ -110,6 +120,11 @@
                     </td>
                     <td>
                         <span class="badge {{ $v->status == 'enable' ? 'bg-success-lt text-success' : 'bg-danger-lt text-danger' }}">{{ $v->status == 'enable' ? 'UP' : 'DOWN' }}</span>
+                    </td>
+                    <td>
+                        <span class="text-muted small">
+                            {{ $v->last_updated ? $v->last_updated->format('d M Y H:i') : 'Never' }}
+                        </span>
                     </td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-secondary" 

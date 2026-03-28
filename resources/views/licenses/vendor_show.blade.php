@@ -101,10 +101,24 @@
                 <div class="card-header border-bottom bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center w-full">
                         <div>
-                            <h2 class="card-title h2 mb-1 text-primary fw-bold">VENDOR: {{ $vendor->name }}</h2>
-                            <p class="text-dark small mb-0">Server: {{ $server?->hostname }} ({{ $server?->ip_address }})
-                                <span class="badge bg-success-lt ms-1">UP</span>
-                            </p>
+                            <h2 class="card-title h2 mb-1 text-primary fw-bold d-flex align-items-center">
+                                @if($vendor->status == 'enable')
+                                    <span class="status-dot status-dot-animated bg-success me-2"></span>
+                                @else
+                                    <span class="status-dot bg-danger me-2"></span>
+                                @endif
+                                VENDOR: {{ $vendor->name }}
+                            </h2>
+                            <div class="d-flex align-items-center flex-wrap gap-2 text-dark small">
+                                <span>Server: {{ $server?->hostname }} ({{ $server?->ip_address }})</span>
+                                <span class="badge {{ $vendor->status == 'enable' ? 'bg-success-lt text-success' : 'bg-danger-lt text-danger' }}">
+                                    {{ $vendor->status == 'enable' ? 'UP' : 'DOWN' }}
+                                </span>
+                                <span class="text-muted ms-2">
+                                    <i class="fas fa-history me-1"></i> Last Update From Server: 
+                                    <span class="fw-bold">{{ $vendor->last_updated ? $vendor->last_updated->format('d M Y H:i') : 'Never' }}</span>
+                                </span>
+                            </div>
                         </div>
                         <div class="d-flex gap-2">
                             @can('create', \App\Models\License::class)
@@ -275,17 +289,23 @@
                         <li class="nav-item fw-bold" role="presentation">
                             <a href="#tabs-features" class="nav-link {{ $activeTab == 'features' ? 'active' : '' }}"
                                 data-bs-toggle="tab" aria-selected="{{ $activeTab == 'features' ? 'true' : 'false' }}"
-                                role="tab">Feature List (Licenses)</a>
+                                role="tab">
+                                <i class="fas fa-cubes me-2 opacity-75"></i> Feature List
+                            </a>
                         </li>
                         <li class="nav-item fw-bold" role="presentation">
                             <a href="#tabs-logs" class="nav-link {{ $activeTab == 'logs' ? 'active' : '' }}"
                                 data-bs-toggle="tab" aria-selected="{{ $activeTab == 'logs' ? 'true' : 'false' }}"
-                                role="tab">User Usage (Logs)</a>
+                                role="tab">
+                                <i class="fas fa-history me-2 opacity-75"></i> Usage Logs
+                            </a>
                         </li>
                         <li class="nav-item fw-bold" role="presentation">
                             <a href="#tabs-access" class="nav-link {{ $activeTab == 'access' ? 'active' : '' }}"
                                 data-bs-toggle="tab" aria-selected="{{ $activeTab == 'access' ? 'true' : 'false' }}"
-                                role="tab">User Access Management</a>
+                                role="tab">
+                                <i class="fas fa-user-shield me-2 opacity-75"></i> Access Management
+                            </a>
                         </li>
                     </ul>
                 </div>
@@ -391,7 +411,11 @@
                                                                     <table class="table table-vcenter table-sm card-table">
                                                                         <thead>
                                                                             <tr class="text-dark bg-light-lt">
-                                                                                <th class="fw-bold py-2">Seat</th>
+                                                                                <th class="fw-bold py-2">
+                                                                                    <div class="d-flex align-items-center">
+                                                                                        Seat
+                                                                                    </div>
+                                                                                </th>
                                                                                 <th class="fw-bold py-2">Username</th>
                                                                                 <th class="fw-bold py-2">IP Location</th>
                                                                                 <th class="fw-bold py-2">Checkin At</th>
@@ -406,7 +430,12 @@
                                                                                     elseif (str_starts_with($checkout->ip_address, '10.30')) $location = 'Surabaya';
                                                                                 @endphp
                                                                                 <tr>
-                                                                                    <td><span class="badge bg-blue-lt">Seat {{ $index + 1 }}</span></td>
+                                                                                    <td>
+                                                                                        <div class="d-flex align-items-center">
+                                                                                            <span class="status-dot status-dot-animated bg-success me-2"></span>
+                                                                                            <span class="badge bg-blue-lt">Seat {{ $index + 1 }}</span>
+                                                                                        </div>
+                                                                                    </td>
                                                                                     <td class="fw-bold text-dark">{{ $checkout->username }}</td>
                                                                                     <td>
                                                                                         <div class="text-dark small">{{ $checkout->ip_address }}</div>
