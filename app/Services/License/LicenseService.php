@@ -34,8 +34,11 @@ class LicenseService
             ->paginate(15);
     }
 
-    public function getVendorDetails(int $serverId, int $vendorId): array
+    public function getVendorDetails(int $vendorId): array
     {
+        $vendor = \App\Models\Vendor::find($vendorId);
+        $serverId = $vendor->license_server_id;
+
         $features = License::where('license_server_id', $serverId)
             ->where('vendor_id', $vendorId)
             ->get();
@@ -62,7 +65,6 @@ class LicenseService
         });
 
         $server = \App\Models\LicenseServer::find($serverId);
-        $vendor = \App\Models\Vendor::find($vendorId);
 
         // Authorized users (usernames) for these features
         $accessRecords = LicenseUserAccess::whereIn('license_id', $features->pluck('id'))

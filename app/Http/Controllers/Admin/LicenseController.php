@@ -24,10 +24,10 @@ class LicenseController extends Controller
         return view('licenses.index', compact('vendors', 'expiring'));
     }
 
-    public function vendorShow(int $serverId, int $vendorId): View
+    public function vendorShow(int $vendorId): View
     {
         $this->authorize('viewAny', License::class);
-        $data = $this->service->getVendorDetails($serverId, $vendorId);
+        $data = $this->service->getVendorDetails($vendorId);
 
         return view('licenses.vendor_show', $data);
     }
@@ -160,5 +160,40 @@ class LicenseController extends Controller
         $this->authorize('update', $license);
         $this->service->toggleStatus($license);
         return back()->with('success', 'License status updated.');
+    }
+
+    public function exportLogs(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', License::class);
+        
+        $vendorId = $request->input('vendor_id');
+        $data = $this->service->getVendorDetails($vendorId);
+        $logs = $data['logs'] ?? collect();
+
+        // Create CSV headers
+        $headers = ['Username', 'Feature', 'Timestamp', 'Event Type'];
+        
+        // Create the response
+        return response()->streamDownload(function () use ($logs, $headers) {
+            $handle = fopen('php://output', 'w');
+            
+            // Write headers
+            fputcsv($handle, $headers);
+            
+            // Write data rows
+            foreach ($logs as $log) {
+                fputcsv($handle, [
+                    $log->username,
+                    $log->license_name ?? 'Unknown',
+                    $log->timestamp ? $log->timestamp->format('d M Y H:i:s') : 'Unknown',
+                    ucfirst($log->event_type),
+                ]);
+            }
+            
+            fclose($handle);
+        }, 'license-logs-' . now()->format('Y-m-d-His') . '.csv', [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="license-logs-' . now()->format('Y-m-d-His') . '.csv"',
+        ]);
     }
 }

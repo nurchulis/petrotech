@@ -51,10 +51,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::middleware('role:admin|super_admin')->prefix('admin')->name('admin.')->group(function () {
 
             // License Management
-            Route::get('/licenses/vendor/{serverId}/{vendorId}', [LicenseController::class, 'vendorShow'])->name('licenses.vendor');
+            Route::get('/licenses/vendor/{vendor}', [LicenseController::class, 'vendorShow'])->name('licenses.vendor');
             Route::post('/licenses/access/grant', [LicenseController::class, 'grantAccess'])->name('licenses.access.grant');
             Route::post('/licenses/access/revoke', [LicenseController::class, 'revokeAccess'])->name('licenses.access.revoke');
             Route::post('/licenses/access/revoke-all', [LicenseController::class, 'revokeAllAccess'])->name('licenses.access.revoke_all');
+            Route::post('/licenses/logs/export', [LicenseController::class, 'exportLogs'])->name('licenses.logs.export');
             Route::post('/vendors', [\App\Http\Controllers\Admin\VendorController::class, 'store'])->name('vendors.store');
             Route::put('/vendors/{vendor}', [\App\Http\Controllers\Admin\VendorController::class, 'update'])->name('vendors.update');
             Route::resource('licenses', LicenseController::class);

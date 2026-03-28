@@ -118,7 +118,7 @@
                             onclick="openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ $v->license_server_id }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
                             Edit
                         </button>
-                        <a href="{{ route('admin.licenses.vendor', [$v->license_server_id, $v->id]) }}" class="btn btn-sm btn-outline-primary ms-1">
+                        <a href="{{ route('admin.licenses.vendor', $v->id) }}" class="btn btn-sm btn-outline-primary ms-1">
                             View Detail
                         </a>
                     </td>

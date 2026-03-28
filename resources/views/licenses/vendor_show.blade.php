@@ -36,6 +36,19 @@
             backdrop-filter: blur(4px);
         }
 
+        @keyframes blink {
+            0%, 49% {
+                opacity: 1;
+            }
+            50%, 100% {
+                opacity: 0.3;
+            }
+        }
+
+        .status-indicator {
+            animation: blink 1.5s infinite;
+        }
+
         .hover-bg-light:hover {
             background-color: rgba(32, 107, 196, 0.03) !important;
             transition: background-color 0.2s ease-in-out;
@@ -53,8 +66,30 @@
             background-color: #f8fafc !important;
         }
 
+        @keyframes progressSlide {
+            0% {
+                width: 0%;
+            }
+            100% {
+                width: var(--target-width, 100%);
+            }
+        }
+
+        .animated-progress {
+            animation: progressSlide 1.2s ease-in-out forwards;
+        }
+
         .border-dashed {
             border-style: dashed !important;
+        }
+
+        .feature-row-selected {
+            background-color: rgba(32, 107, 196, 0.1) !important;
+            border-left: 4px solid #206bc4 !important;
+        }
+
+        .feature-row-selected .fa-chevron-down {
+            color: #206bc4 !important;
         }
     </style>
 @endpush
@@ -66,7 +101,7 @@
                 <div class="card-header border-bottom bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center w-full">
                         <div>
-                            <h2 class="card-title h3 mb-1 text-primary fw-bold">Vendor: {{ $vendor->name }}</h2>
+                            <h2 class="card-title h2 mb-1 text-primary fw-bold">VENDOR: {{ $vendor->name }}</h2>
                             <p class="text-dark small mb-0">Server: {{ $server?->hostname }} ({{ $server?->ip_address }})
                                 <span class="badge bg-success-lt ms-1">UP</span>
                             </p>
@@ -84,19 +119,170 @@
                     </div>
                 </div>
 
+                {{-- Feature Usage Summary (Collapsible Infographic) --}}
+                @php
+                    $totalSeats = $features->sum('total_seats') ?? 0;
+                    $totalUsedSeats = $features->sum('used_seats') ?? 0;
+                    $usagePercentage = $totalSeats > 0 ? ($totalUsedSeats / $totalSeats) * 100 : 0;
+                    $usageColor = $usagePercentage > 85 ? 'bg-danger' : ($usagePercentage >= 60 ? 'bg-warning' : 'bg-success');
+                    $usageColorClass = $usagePercentage > 85 ? 'danger' : ($usagePercentage >= 60 ? 'warning' : 'success');
+                @endphp
+
+                <div class="card-body border-bottom p-3 bg-white">
+                    {{-- Title and Chevron --}}
+                    <button class="btn btn-link text-start p-0 w-100 text-decoration-none mb-3 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#featureUsageSummary" aria-expanded="false" aria-controls="featureUsageSummary">
+                        <h4 class="text-dark fw-bold m-0 d-flex align-items-center">
+                            <i class="fas fa-chart-pie me-2 text-primary"></i>
+                            Feature Usage Summary
+                        </h4>
+                        <i class="fas fa-chevron-down transition-transform" 
+                           style="font-size: 0.85rem; cursor: pointer;" 
+                           id="featureUsageSummaryTooltip"
+                           data-bs-toggle="tooltip" 
+                           data-bs-placement="top" 
+                           data-bs-title="Click to view feature usage summary"
+                           role="img"
+                           aria-label="Expand feature usage summary"></i>
+                    </button>
+
+                    <div class="row g-4">
+                        {{-- Summary Stats and Progress --}}
+                        <div class="col-lg-9">
+                            {{-- Overall Progress Bar with Animation --}}
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted fw-bold">Overall Usage</small>
+                                    <span class="badge bg-{{ $usageColorClass }}-lt text-{{ $usageColorClass }} fw-bold">
+                                        {{ number_format($usagePercentage, 1) }}%
+                                    </span>
+                                </div>
+                                <div class="progress progress-lg" style="height: 24px;">
+                                    <div class="progress-bar {{ $usageColor }} animated-progress" 
+                                         role="progressbar" 
+                                         style="width: 0%;"
+                                         data-target-width="{{ min($usagePercentage, 100) }}"
+                                         aria-valuenow="{{ $usagePercentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Summary Stats Row --}}
+                            <div class="row g-3 small">
+                                <div class="col-6 col-md-3">
+                                    <div class="bg-light-lt p-3 rounded-2 text-center">
+                                        <div class="text-muted small mb-1">Total Features</div>
+                                        <div class="text-dark fw-bold" style="font-size: 1.3rem;">{{ $features->count() }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="bg-light-lt p-3 rounded-2 text-center">
+                                        <div class="text-muted small mb-1">Total Seats</div>
+                                        <div class="text-dark fw-bold" style="font-size: 1.3rem;">{{ $totalSeats }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="bg-light-lt p-3 rounded-2 text-center">
+                                        <div class="text-muted small mb-1">Used Seats</div>
+                                        <div class="text-dark fw-bold text-{{ $usageColorClass }}" style="font-size: 1.3rem;">{{ $totalUsedSeats }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="bg-light-lt p-3 rounded-2 text-center">
+                                        <div class="text-muted small mb-1">Free Seats</div>
+                                        <div class="text-dark fw-bold text-success" style="font-size: 1.3rem;">{{ $totalSeats - $totalUsedSeats }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Donut Chart --}}
+                        <div class="col-lg-3 d-flex justify-content-center align-items-center">
+                            <div class="text-center">
+                                <div style="position: relative; width: 140px; height: 140px; margin: 0 auto;">
+                                    <svg viewBox="0 0 100 100" style="transform: rotate(-90deg);">
+                                        {{-- Background circle --}}
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#e9ecef" stroke-width="8"/>
+                                        {{-- Progress circle --}}
+                                        <circle cx="50" cy="50" r="40" fill="none" 
+                                                stroke-dasharray="{{ (252 * $usagePercentage / 100) }} 252"
+                                                stroke="currentColor" 
+                                                stroke-width="8"
+                                                class="text-{{ $usageColorClass }}"
+                                                style="transition: stroke-dasharray 1s ease-in-out;"/>
+                                    </svg>
+                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                        <div class="fw-bold text-dark" style="font-size: 1.8rem;">{{ number_format($usagePercentage, 0) }}%</div>
+                                        <small class="text-muted d-block" style="font-size: 0.8rem;">Used</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-link text-start p-0 w-100 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#featureUsageSummary" aria-expanded="false" aria-controls="featureUsageSummary">
+                    </button>
+
+                    {{-- Collapsible Detail Section --}}
+                    <div class="collapse mt-3" id="featureUsageSummary">
+                        <div class="card card-flush border-0 bg-light-lt">
+                            <div class="card-header bg-transparent border-0 py-2">
+                                <h5 class="card-title text-dark small fw-bold mb-0">Feature Breakdown</h5>
+                            </div>
+                            <div class="card-body p-2">
+                                @forelse($features as $feature)
+                                    @php
+                                        $featureUsed = $feature->used_seats;
+                                        $featureTotal = $feature->total_seats;
+                                        $featurePercent = $featureTotal > 0 ? ($featureUsed / $featureTotal) * 100 : 0;
+                                        $featureColor = $featurePercent > 85 ? 'bg-danger' : ($featurePercent >= 60 ? 'bg-warning' : 'bg-success');
+                                    @endphp
+                                    <div class="row g-2 align-items-center py-2 border-bottom small">
+                                        <div class="col-12 col-sm-5">
+                                            <div class="fw-bold text-dark text-truncate">{{ $feature->license_name }}</div>
+                                            <div class="text-muted" style="font-size: 0.85rem;">{{ $featureUsed }} / {{ $featureTotal }} seats</div>
+                                        </div>
+                                        <div class="col-12 col-sm-7">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height: 16px;">
+                                                    <div class="progress-bar {{ $featureColor }}"
+                                                         style="width: {{ min($featurePercent, 100) }}%;"
+                                                         role="progressbar"
+                                                         aria-valuenow="{{ $featurePercent }}"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <span class="text-dark fw-bold" style="min-width: 40px; text-align: right;">
+                                                    {{ number_format($featurePercent, 0) }}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="p-3 text-center text-muted small">
+                                        No features available.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card-header border-bottom p-0">
                     <ul class="nav nav-tabs" data-bs-toggle="tabs" role="tablist">
-                        <li class="nav-item" role="presentation">
+                        <li class="nav-item fw-bold" role="presentation">
                             <a href="#tabs-features" class="nav-link {{ $activeTab == 'features' ? 'active' : '' }}"
                                 data-bs-toggle="tab" aria-selected="{{ $activeTab == 'features' ? 'true' : 'false' }}"
                                 role="tab">Feature List (Licenses)</a>
                         </li>
-                        <li class="nav-item" role="presentation">
+                        <li class="nav-item fw-bold" role="presentation">
                             <a href="#tabs-logs" class="nav-link {{ $activeTab == 'logs' ? 'active' : '' }}"
                                 data-bs-toggle="tab" aria-selected="{{ $activeTab == 'logs' ? 'true' : 'false' }}"
                                 role="tab">User Usage (Logs)</a>
                         </li>
-                        <li class="nav-item" role="presentation">
+                        <li class="nav-item fw-bold" role="presentation">
                             <a href="#tabs-access" class="nav-link {{ $activeTab == 'access' ? 'active' : '' }}"
                                 data-bs-toggle="tab" aria-selected="{{ $activeTab == 'access' ? 'true' : 'false' }}"
                                 role="tab">User Access Management</a>
@@ -112,11 +298,13 @@
                             <table class="table table-vcenter table-hover card-table">
                                 <thead>
                                     <tr class="text-dark">
+                                        <th class="fw-bold" style="width: 50px;">No</th>
                                         <th class="fw-bold">Feature Name</th>
                                         <th class="fw-bold">Capacity</th>
                                         <th class="fw-bold">In Use</th>
                                         <th class="fw-bold">Expiry</th>
                                         <th class="fw-bold">Status</th>
+                                        <th class="fw-bold text-end">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -126,6 +314,7 @@
                                             data-bs-target="#details-{{ $f->id }}"
                                             aria-expanded="false"
                                             title="Click to view active users">
+                                            <td class="text-center text-muted fw-bold small" style="width: 50px;">{{ $loop->iteration }}</td>
                                             <td class=" text-dark">{{ $f->license_name }}</td>
                                             <!-- <td><span class="text-muted small">{{ $f->application_name }}</span></td> -->
                                             <td>{{ $f->total_seats }} seats</td>
@@ -169,11 +358,28 @@
                                             <td>
                                                 <span class="badge {{ $f->status == 'enable' ? 'bg-success' : 'bg-secondary' }} badge-empty me-1"></span>
                                                 <span class="small text-capitalize">{{ $f->status }}d</span>
-                                                <i class="fas fa-chevron-down ms-2 opacity-50 transition-transform"></i>
+                                                <i class="fas fa-chevron-down ms-2 opacity-50 transition-transform {{ $loop->first ? 'feature-list-tooltip' : '' }}"
+                                                   @if($loop->first) 
+                                                     id="featureListChevronTooltip"
+                                                     data-bs-toggle="tooltip" 
+                                                     data-bs-placement="top" 
+                                                     data-bs-title="Click row to view active users"
+                                                     role="img"
+                                                     aria-label="View active users"
+                                                     style="cursor: pointer;"
+                                                   @endif>
+                                                </i>
+                                            </td>
+                                            <td class="text-end">
+                                                @can('update', $f)
+                                                <a href="{{ route('admin.licenses.edit', $f) }}" class="btn btn-sm btn-primary" title="Edit License">
+                                                    <i class="fas fa-edit me-1"></i> Edit
+                                                </a>
+                                                @endcan
                                             </td>
                                         </tr>
                                         <tr class="collapse border-0" id="details-{{ $f->id }}">
-                                            <td colspan="5" class="p-0 border-0">
+                                            <td colspan="8" class="p-0 border-0">
                                                 <div class="p-3 bg-light-lt border-bottom">
                                                     <div class="card shadow-none border-dashed mb-0">
                                                         <div class="card-header py-2 bg-transparent">
@@ -231,7 +437,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-4 text-muted">No features found for this
+                                            <td colspan="7" class="text-center py-4 text-muted">No features found for this
                                                 vendor.</td>
                                         </tr>
                                     @endforelse
@@ -256,6 +462,17 @@
 
                     {{-- User Usage Logs Tab --}}
                     <div class="tab-pane {{ $activeTab == 'logs' ? 'active show' : '' }}" id="tabs-logs" role="tabpanel">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h3 class="card-title">Usage Logs</h3>
+                            @if($logs->count() > 0)
+                            <form action="{{ route('admin.licenses.logs.export', ['vendor_id' => $vendor->id]) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-download me-1"></i> Download Excel
+                                </button>
+                            </form>
+                            @endif
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table">
                                 <thead>
@@ -282,8 +499,8 @@
                                             </td>
                                             <td>
                                                 <span
-                                                    class="badge {{ $log->event_type == 'OUT' ? 'bg-warning-lt text-warning' : 'bg-success-lt text-success' }} small">
-                                                    {{ $log->event_type == 'OUT' ? 'CHECKOUT' : 'CHECKIN' }}
+                                                    class="badge {{ $log->event_type == 'checkout' ? 'bg-warning-lt text-warning' : 'bg-success-lt text-success' }} small">
+                                                    {{ $log->event_type == 'checkout' ? 'CHECKOUT' : 'CHECKIN' }}
                                                 </span>
                                             </td>
                                         </tr>
@@ -470,13 +687,13 @@
             </div>
         </div>
         {{-- Sync Feedback Overlay --}}
-        <div id="syncOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none"
+        <div id="syncOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center"
             style="z-index: 9999; background: rgba(255,255,255,0.9); backdrop-filter: blur(4px);">
-            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center p-5">
+            <div class="text-center p-5" style="max-width: 500px;">
                 <h3 class="mb-4 text-primary" style="font-size: 1.5rem; font-weight: 600;">Syncing Data...</h3>
 
                 <div class="d-flex align-items-center justify-content-center mb-4"
-                    style="height: 120px; width: 100%; max-width: 500px;">
+                    style="height: 120px; width: 100%;">
                     <div class="text-center" style="width: 100px;">
                         <div class="bg-light p-3 rounded-3 mb-2 shadow-sm">
                             <i class="fas fa-desktop fa-2x text-muted"></i>
@@ -499,7 +716,7 @@
                     </div>
                 </div>
 
-                <p class="text-muted mb-0" style="max-width: 400px;">Please wait while we synchronize your changes with the
+                <p class="text-muted mb-0">Please wait while we synchronize your changes with the
                     license server. This ensures all session data is updated correctly.</p>
                 <div class="mt-4">
                     <div class="spinner-border text-primary" style="width: 2rem; height: 2rem;" role="status">
@@ -547,6 +764,83 @@
                 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl)
                 })
+
+                // Auto-show Feature Usage Summary tooltip on page load
+                const featureUsageSummaryTooltip = document.getElementById('featureUsageSummaryTooltip');
+                if (featureUsageSummaryTooltip) {
+                    const tooltipInstance = bootstrap.Tooltip.getInstance(featureUsageSummaryTooltip) || 
+                                           new bootstrap.Tooltip(featureUsageSummaryTooltip);
+                    
+                    // Show tooltip after a brief delay
+                    setTimeout(() => {
+                        tooltipInstance.show();
+                    }, 500);
+                    
+                    // Auto-hide tooltip after 4 seconds
+                    setTimeout(() => {
+                        tooltipInstance.hide();
+                    }, 4500);
+
+                    // Re-show tooltip on page refresh (if user navigates away and comes back)
+                    // This fires whenever tab becomes visible again
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden && featureUsageSummaryTooltip) {
+                            setTimeout(() => {
+                                tooltipInstance.show();
+                            }, 300);
+                            
+                            setTimeout(() => {
+                                tooltipInstance.hide();
+                            }, 4300);
+                        }
+                    });
+                }
+
+                // Auto-show Feature List Chevron tooltip on first row only
+                const featureListChevronTooltip = document.getElementById('featureListChevronTooltip');
+                if (featureListChevronTooltip) {
+                    const chevronTooltipInstance = bootstrap.Tooltip.getInstance(featureListChevronTooltip) || 
+                                                   new bootstrap.Tooltip(featureListChevronTooltip);
+                    
+                    // Show tooltip after a brief delay
+                    setTimeout(() => {
+                        chevronTooltipInstance.show();
+                    }, 1500);
+                    
+                    // Auto-hide tooltip after 4 seconds
+                    setTimeout(() => {
+                        chevronTooltipInstance.hide();
+                    }, 5500);
+
+                    // Re-show tooltip on page refresh
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden && featureListChevronTooltip) {
+                            setTimeout(() => {
+                                chevronTooltipInstance.show();
+                            }, 1000);
+                            
+                            setTimeout(() => {
+                                chevronTooltipInstance.hide();
+                            }, 5000);
+                        }
+                    });
+                }
+
+                // Handle row selection and visual feedback
+                const featureRows = document.querySelectorAll('tr.cursor-pointer.hover-bg-light');
+                featureRows.forEach(row => {
+                    row.addEventListener('click', function() {
+                        // Remove selected class from all rows
+                        featureRows.forEach(r => r.classList.remove('feature-row-selected'));
+                        
+                        // Add selected class to clicked row
+                        this.classList.add('feature-row-selected');
+                        
+                        // Update aria-expanded
+                        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                        this.setAttribute('aria-expanded', !isExpanded);
+                    });
+                });
 
                 // Feature Multi-select Dropdown (Create Form)
                 setupDropdownHandlers('.feature-checkbox', '.selected-count');
@@ -669,6 +963,26 @@
                         showSyncAndSubmit(formToSubmit);
                     }
                 });
+
+                // Animate progress bars on page load
+                function animateProgressBars() {
+                    const progressBars = document.querySelectorAll('.animated-progress');
+                    progressBars.forEach(bar => {
+                        const targetWidth = parseFloat(bar.getAttribute('data-target-width')) || 0;
+                        bar.style.setProperty('--target-width', targetWidth + '%');
+                    });
+                }
+
+                // Call animation on load
+                animateProgressBars();
+
+                // Re-animate when summary collapse is expanded
+                const featureUsageSummary = document.getElementById('featureUsageSummary');
+                if (featureUsageSummary) {
+                    featureUsageSummary.addEventListener('show.bs.collapse', function () {
+                        animateProgressBars();
+                    });
+                }
             });
         </script>
     @endpush

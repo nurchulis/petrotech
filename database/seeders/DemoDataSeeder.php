@@ -148,16 +148,18 @@ class DemoDataSeeder extends Seeder
                 ])
             );
 
-            // Add fresh usage logs with IPs
+            // Add fresh usage logs with IPs (mixed checkout and checkin events)
             $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
             $ips = ($vendorName === 'lgcx') ? ['10.10.1.', '10.30.1.'] : ['10.20.1.'];
-            for ($j = 0; $j < rand(2, 5); $j++) {
+            for ($j = 0; $j < rand(3, 8); $j++) {
                 $username = $usernames[array_rand($usernames)];
                 $baseIp = $ips[array_rand($ips)];
+                $eventType = rand(0, 1) === 0 ? 'checkout' : 'checkin';
+                $eventAction = $eventType === 'checkout' ? 'checked out' : 'checked in';
                 LicenseLog::create([
                     'license_id' => $license->id,
-                    'event_type' => 'checkout',
-                    'event_detail' => "User '{$username}' checked out feature",
+                    'event_type' => $eventType,
+                    'event_detail' => "User '{$username}' {$eventAction} feature",
                     'user_count' => rand(1, 10),
                     'recorded_at' => now()->subMinutes(rand(10, 500)),
                     'ip_address' => $baseIp . rand(100, 254),
@@ -227,16 +229,18 @@ class DemoDataSeeder extends Seeder
                 ])
             );
 
-            // Add fresh usage logs with IPs
+            // Add fresh usage logs with IPs (mixed checkout and checkin events)
             $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
             $ips = ($vendorName === 'licsrv') ? ['10.30.1.'] : ['10.10.1.', '10.20.1.'];
-            for ($j = 0; $j < rand(2, 5); $j++) {
+            for ($j = 0; $j < rand(3, 8); $j++) {
                 $username = $usernames[array_rand($usernames)];
                 $baseIp = $ips[array_rand($ips)];
+                $eventType = rand(0, 1) === 0 ? 'checkout' : 'checkin';
+                $eventAction = $eventType === 'checkout' ? 'checked out' : 'checked in';
                 LicenseLog::create([
                     'license_id' => $license->id,
-                    'event_type' => 'checkout',
-                    'event_detail' => "User '{$username}' checked out feature",
+                    'event_type' => $eventType,
+                    'event_detail' => "User '{$username}' {$eventAction} feature",
                     'user_count' => rand(1, 10),
                     'recorded_at' => now()->subMinutes(rand(10, 500)),
                     'ip_address' => $baseIp . rand(100, 254),
