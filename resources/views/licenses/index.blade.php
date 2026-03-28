@@ -18,10 +18,13 @@
 
     @php
         // Fetch all vendors to calculate stats
-        $allVendors = \App\Models\Vendor::all();
+        $allVendors = \App\Models\Vendor::with('server')->get();
         $totalVendors = $allVendors->count();
+
+        // Reverting: UP = status 'enable', DOWN = status 'disable'
         $upVendors = $allVendors->where('status', 'enable')->count();
         $downVendors = $allVendors->where('status', 'disable')->count();
+
         $upPercentage = $totalVendors > 0 ? ($upVendors / $totalVendors) * 100 : 0;
         $downPercentage = $totalVendors > 0 ? ($downVendors / $totalVendors) * 100 : 0;
     @endphp
@@ -33,40 +36,47 @@
                 <div class="row g-0">
                     <div class="col-md-3 border-end">
                         <div class="card-body text-center py-4">
-                            <div class="text-muted mb-2 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Server Status</div>
-                            <div class="h1 mb-1 fw-bold" style="color: #1a3c6b;">{{ number_format($upPercentage, 0) }}%</div>
+                            <div class="text-muted mb-2 text-uppercase fw-bold"
+                                style="font-size: 0.65rem; letter-spacing: 0.05em;">Server Status</div>
+                            <div class="h1 mb-1 fw-bold" style="color: #1a3c6b;">{{ number_format($upPercentage, 0) }}%
+                            </div>
                             <div class="badge bg-success-lt text-success px-2 py-1">OPERATIONAL</div>
                         </div>
                     </div>
                     <div class="col-md-6 border-end">
                         <div class="card-body py-4 h-100 d-flex flex-column justify-content-center">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="fw-bold text-dark small"><i class="fas fa-heartbeat me-1 text-primary"></i> Infrastructure Health Distribution</span>
+                                <span class="fw-bold text-dark small"><i class="fas fa-heartbeat me-1 text-primary"></i>
+                                    Infrastructure Health Distribution</span>
                                 <span class="text-muted small">{{ $upVendors }} / {{ $totalVendors }} Vendors UP</span>
                             </div>
                             <div class="progress mb-3" style="height: 12px; border-radius: 6px; background-color: #f1f5f9;">
-                                <div class="progress-bar bg-success" style="width: {{ $upPercentage }}%" data-bs-toggle="tooltip" title="UP: {{ $upVendors }} Vendors"></div>
-                                <div class="progress-bar bg-danger" style="width: {{ $downPercentage }}%" data-bs-toggle="tooltip" title="DOWN: {{ $downVendors }} Vendors"></div>
+                                <div class="progress-bar bg-success" style="width: {{ $upPercentage }}%"
+                                    data-bs-toggle="tooltip" title="UP: {{ $upVendors }} Vendors"></div>
+                                <div class="progress-bar bg-danger" style="width: {{ $downPercentage }}%"
+                                    data-bs-toggle="tooltip" title="DOWN: {{ $downVendors }} Vendors"></div>
                             </div>
                             <div class="row g-2">
-                                 <div class="col-6">
-                                     <div class="d-flex align-items-center small text-muted">
-                                         <span class="status-dot status-dot-animated bg-success me-2 border-0 shadow-none"></span>
-                                         <span>Online: {{ number_format($upPercentage, 1) }}%</span>
-                                     </div>
-                                 </div>
-                                 <div class="col-6 text-end">
-                                     <div class="d-flex align-items-center justify-content-end small text-muted">
-                                         <span class="status-dot bg-danger me-2 border-0 shadow-none"></span>
-                                         <span>Offline: {{ number_format($downPercentage, 1) }}%</span>
-                                     </div>
-                                 </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center small text-muted">
+                                        <span
+                                            class="status-dot status-dot-animated bg-success me-2 border-0 shadow-none"></span>
+                                        <span>Online: {{ number_format($upPercentage, 1) }}%</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <div class="d-flex align-items-center justify-content-end small text-muted">
+                                        <span class="status-dot bg-danger me-2 border-0 shadow-none"></span>
+                                        <span>Offline: {{ number_format($downPercentage, 1) }}%</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 bg-light-lt">
                         <div class="card-body text-center py-4 h-100 d-flex flex-column justify-content-center">
-                            <div class="text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">Total Assets</div>
+                            <div class="text-muted mb-1 text-uppercase fw-bold"
+                                style="font-size: 0.65rem; letter-spacing: 0.05em;">Total Assets</div>
                             <div class="h2 mb-0 fw-bold text-dark">{{ $totalVendors }}</div>
                             <div class="small text-muted">Registered Vendors</div>
                         </div>
@@ -170,14 +180,19 @@
                 </thead>
                 <tbody>
                     @forelse($vendors as $v)
+                        @php
+                            $isOnline = $v->status == 'enable' &&
+                                $v->last_updated &&
+                                $v->last_updated->diffInMinutes(now()) <= 10;
+                        @endphp
                         <tr>
                             <td class="text-muted">{{ $loop->iteration + ($vendors->firstItem() - 1) }}</td>
                             <td>
                                 <div class="d-inline-flex align-items-center">
                                     @if($v->status == 'enable')
-                                        <span class="status-dot status-dot-animated bg-success me-2"></span>
+                                        <span class="status-dot status-dot-animated bg-success me-2 border-0"></span>
                                     @else
-                                        <span class="status-dot bg-danger me-2"></span>
+                                        <span class="status-dot bg-danger me-2 border-0"></span>
                                     @endif
                                     <strong class="text-primary">{{ $v->name }}</strong>
                                 </div>
@@ -197,7 +212,16 @@
                             </td>
                             <td>
                                 <span
-                                    class="badge {{ $v->status == 'enable' ? 'bg-success-lt text-success' : 'bg-danger-lt text-danger' }}">{{ $v->status == 'enable' ? 'UP' : 'DOWN' }}</span>
+                                    class="badge {{ $v->status == 'enable' ? 'bg-success-lt text-success' : 'bg-danger-lt text-danger' }} border-0">
+                                    @if($v->status != 'enable')
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                    @endif
+                                    {{ $v->status == 'enable' ? 'UP' : 'DOWN' }}
+                                </span>
+                                @if($v->status == 'enable' && !$isOnline)
+                                    <i class="fas fa-clock text-warning ms-1" data-bs-toggle="tooltip"
+                                        title="Stale connection: last update was > 10 mins ago"></i>
+                                @endif
                             </td>
                             <td>
                                 <span class="text-muted small">
@@ -225,8 +249,27 @@
             </table>
         </div>
         @if($vendors->hasPages())
-            <div class="card-footer">{{ $vendors->withQueryString()->links() }}</div>
+            <div class="card-footer py-2">{{ $vendors->withQueryString()->links() }}</div>
         @endif
+        <div class="card-footer bg-light-lt py-2">
+            <div class="d-flex flex-wrap align-items-center gap-4 small text-dark">
+                <span class="fw-bold"><i class="fas fa-info-circle me-1 opacity-50"></i> Status Legend:</span>
+                <span class="d-flex align-items-center">
+                    <span class="status-dot status-dot-animated bg-success me-2 border-0"
+                        style="width: 10px; height: 10px;"></span>
+                    <strong>UP</strong> = Vendor is enabled and server has been connected.
+                </span>
+                <span class="d-flex align-items-center text-muted">
+                    <i class="fas fa-clock text-warning me-1"></i>
+                    = Communicated > 10 mins ago (STALE).
+                </span>
+                <span class="d-flex align-items-center">
+                    <span class="status-dot bg-danger me-2 border-0" style="width: 10px; height: 10px;"></span>
+                    <strong>DOWN</strong> = <i class="fas fa-exclamation-triangle text-danger me-1"></i> Vendor is disabled
+                    or manually turned off.
+                </span>
+            </div>
+        </div>
     </div>
 
     {{-- Edit Vendor Modal --}}
