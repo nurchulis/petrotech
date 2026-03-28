@@ -82,6 +82,25 @@ class Vm extends Model
         return $this->hasMany(VmMetric::class);
     }
 
+    /**
+     * Users with direct access to this VM.
+     */
+    public function accessUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_vm_access')
+                    ->withPivot('expires_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Groups with access to this VM.
+     */
+    public function accessGroups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_vm_access')
+                    ->withTimestamps();
+    }
+
     // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------

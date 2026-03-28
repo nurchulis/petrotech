@@ -28,7 +28,7 @@ APP_NAME="Petrotechnical Platform"
 APP_ENV=production
 APP_KEY=base64:...           # Generate with: php artisan key:generate
 APP_DEBUG=false
-APP_URL=https://petrotech.internal.pertamina.com
+APP_URL=https://petrotech.internal.application.com
 
 LOG_CHANNEL=daily
 LOG_LEVEL=warning
@@ -47,9 +47,9 @@ CACHE_DRIVER=file            # Or redis for production
 QUEUE_CONNECTION=sync        # Or database/redis for background jobs
 
 MAIL_MAILER=smtp
-MAIL_HOST=smtp.internal.pertamina.com
+MAIL_HOST=smtp.internal.application.com
 MAIL_PORT=587
-MAIL_FROM_ADDRESS=noreply@pertamina.com
+MAIL_FROM_ADDRESS=noreply@application.com
 MAIL_FROM_NAME="Petrotechnical Platform"
 
 # Guacamole (Apache Guacamole for real RDP sessions)
@@ -80,13 +80,13 @@ GRANT ALL ON SCHEMA public TO petrotech_user;
 ```nginx
 server {
     listen 80;
-    server_name petrotech.internal.pertamina.com;
+    server_name petrotech.internal.application.com;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name petrotech.internal.pertamina.com;
+    server_name petrotech.internal.application.com;
 
     root /var/www/petrotech/public;
     index index.php;
@@ -165,7 +165,7 @@ php_value[max_execution_time] = 120
 ```bash
 # 1. Clone / pull the repository
 cd /var/www
-git clone https://github.com/pertamina-uc2/petrotech.git
+git clone https://github.com/application-uc2/petrotech.git
 cd petrotech
 
 # 2. Install PHP dependencies (no dev)

@@ -52,6 +52,24 @@ class User extends Authenticatable
         return $this->hasMany(Vm::class, 'assigned_user_id');
     }
 
+    /**
+     * Groups this user belongs to.
+     */
+    public function groups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Group::class);
+    }
+
+    /**
+     * VMs directly assigned to this user (many-to-many access control).
+     */
+    public function directVmAccess(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Vm::class, 'user_vm_access')
+                    ->withPivot('expires_at')
+                    ->withTimestamps();
+    }
+
     public function createdTickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'created_by');
@@ -67,6 +85,13 @@ class User extends Authenticatable
         return $this->hasMany(TicketComment::class);
     }
 
+    public function accessibleLicenses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(License::class, 'license_user_access')
+                    ->withPivot(['granted_by', 'expires_at'])
+                    ->withTimestamps();
+    }
+
     public function createdLicenses(): HasMany
     {
         return $this->hasMany(License::class, 'created_by');
@@ -78,6 +103,11 @@ class User extends Authenticatable
     }
 
     // Helpers
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     public function getAvatarUrlAttribute(): string
     {
         return $this->avatar

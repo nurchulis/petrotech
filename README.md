@@ -9,7 +9,7 @@
 
 ## 1. Overview
 
-**Petrotechnical Platform UC2** is an internal cloud infrastructure management platform for **Pertamina UC2**. It provides:
+**Petrotechnical Platform UC2** is an internal cloud infrastructure management platform for **Application UC2**. It provides:
 
 - **VDI Access** — browser-based remote desktop sessions via Apache Guacamole (real RDP) or simulated desktop (dummy mode)
 - **License Management** — lifecycle tracking for engineering software licenses (Petrel, Eclipse, Kingdom)

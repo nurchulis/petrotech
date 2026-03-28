@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\VmMonitorController;
 use App\Http\Controllers\Admin\StorageController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\VmManagementController;
+use App\Http\Controllers\Admin\GroupController;
+use App\Http\Controllers\Admin\VdiAccessController;
 use App\Http\Controllers\RBAC\UserController;
 use App\Http\Controllers\RBAC\RoleController;
 
@@ -49,9 +51,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::middleware('role:admin|super_admin')->prefix('admin')->name('admin.')->group(function () {
 
             // License Management
+            Route::get('/licenses/vendor/{vendor}', [LicenseController::class, 'vendorShow'])->name('licenses.vendor');
+            Route::post('/licenses/access/grant', [LicenseController::class, 'grantAccess'])->name('licenses.access.grant');
+            Route::post('/licenses/access/revoke', [LicenseController::class, 'revokeAccess'])->name('licenses.access.revoke');
+            Route::post('/licenses/access/revoke-all', [LicenseController::class, 'revokeAllAccess'])->name('licenses.access.revoke_all');
+            Route::post('/licenses/logs/export', [LicenseController::class, 'exportLogs'])->name('licenses.logs.export');
+            Route::post('/vendors', [\App\Http\Controllers\Admin\VendorController::class, 'store'])->name('vendors.store');
+            Route::put('/vendors/{vendor}', [\App\Http\Controllers\Admin\VendorController::class, 'update'])->name('vendors.update');
             Route::resource('licenses', LicenseController::class);
 
-            Route::post('/licenses/{license}/toggle', [LicenseController::class , 'toggle'])->name('licenses.toggle');
+            Route::post('/licenses/{license}/toggle', [LicenseController::class, 'toggle'])->name('licenses.toggle');
 
             // VM Monitoring
             Route::prefix('vm-monitoring')->name('vm-monitoring.')->group(function () {
@@ -76,6 +85,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('vm-management', VmManagementController::class)
                     ->parameters(['vm-management' => 'vm']);
 
+                // Group Management
+                Route::resource('groups', GroupController::class)->except(['show']);
+                
+                Route::get('groups/{group}/members', [GroupController::class, 'members'])->name('groups.members');
+                Route::post('groups/{group}/members', [GroupController::class, 'addMember'])->name('groups.members.add');
+                Route::delete('groups/{group}/members/{user}', [GroupController::class, 'removeMember'])->name('groups.members.remove');
+                
+                Route::get('groups/{group}/vms', [GroupController::class, 'vms'])->name('groups.vms');
+                Route::post('groups/{group}/vms', [GroupController::class, 'addVm'])->name('groups.vms.add');
+                Route::delete('groups/{group}/vms/{vm}', [GroupController::class, 'removeVm'])->name('groups.vms.remove');
+
+                // VDI Access Management
+                Route::get('vdi-access/users/{user}', [VdiAccessController::class, 'userAccess'])->name('vdi-access.user');
+                Route::post('vdi-access/users/{user}', [VdiAccessController::class, 'syncUserAccess'])->name('vdi-access.user.sync');
             }
             );
 

@@ -55,6 +55,17 @@
                     </select>
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label fw-semibold">Vendor *</label>
+                    <select id="vendor_id" name="vendor_id" class="form-select" required>
+                        <option value="">— Select Vendor —</option>
+                        @foreach($vendors as $vendor)
+                        <option value="{{ $vendor->id }}" {{ old('vendor_id', $license->vendor_id) == $vendor->id ? 'selected' : '' }}>
+                            {{ $vendor->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
                     <label class="form-label fw-semibold">Log File Path</label>
                     <input type="text" id="log_file_path" name="log_file_path"
                         class="form-control" placeholder="/var/log/flexlm/license.log"
