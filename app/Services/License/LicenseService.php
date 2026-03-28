@@ -43,22 +43,24 @@ class LicenseService
             ->get();
 
         $features->each(function ($f) {
-            // Pick most recent unique users from checkout logs for this feature
-            $recentLogUsers = LicenseLog::where('license_id', $f->id)
+            $recentCheckouts = LicenseLog::where('license_id', $f->id)
                 ->where('event_type', 'checkout')
                 ->orderBy('recorded_at', 'desc')
                 ->get()
                 ->map(function ($log) {
                     preg_match("/'([^']+)'/", $log->event_detail, $matches);
-                    return $matches[1] ?? null;
+                    return (object)[
+                        'username' => $matches[1] ?? 'Unknown',
+                        'recorded_at' => $log->recorded_at,
+                        'ip_address' => $log->ip_address,
+                    ];
                 })
-                ->filter()
-                ->unique()
-                ->take($f->used_seats) // Ensure we only show as many users as seats used
-                ->toArray();
+                ->unique('username')
+                ->take($f->used_seats)
+                ->values();
 
-            $f->active_users_list = implode(', ', $recentLogUsers);
-            $f->active_checkouts = $recentLogUsers; // Initialize for count() in blade
+            $f->active_users_list = $recentCheckouts->pluck('username')->implode(', ');
+            $f->active_checkouts = $recentCheckouts; // Now contains objects with timestamps
         });
 
         $server = \App\Models\LicenseServer::find($serverId);

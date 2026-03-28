@@ -52,13 +52,23 @@ class DemoDataSeeder extends Seeder
         ]);
 
         // ─── License Servers ──────────────────────────────────────────────
-        $server = LicenseServer::create([
+        $serverJKT = LicenseServer::create([
             'server_name' => 'LIC-SVR-JKT-01',
-            'hostname' => 'licsrv01.application.local',
+            'hostname' => 'licsrv-jkt.application.local',
             'ip_address' => '10.10.1.100',
             'port' => 27000,
             'os_type' => 'Windows Server 2019',
             'location' => 'Jakarta',
+            'status' => 'active',
+        ]);
+
+        $serverBPN = LicenseServer::create([
+            'server_name' => 'LIC-SVR-BPN-01',
+            'hostname' => 'licsrv-bpn.application.local',
+            'ip_address' => '10.20.1.100',
+            'port' => 27001,
+            'os_type' => 'Red Hat Enterprise Linux 8',
+            'location' => 'Balikpapan',
             'status' => 'active',
         ]);
 
@@ -70,7 +80,7 @@ class DemoDataSeeder extends Seeder
                 'version' => '5000',
                 'application_name' => 'Petrel RE',
                 'status' => 'enable',
-                'expiry_date' => Carbon::createFromFormat('d-M-Y', '01-Jan-2027'),
+                'expiry_date' => now()->subMonths(1), // Expired (Red)
                 'total_seats' => 5,
                 'used_seats' => 2
             ],
@@ -80,7 +90,7 @@ class DemoDataSeeder extends Seeder
                 'version' => '5020.0',
                 'application_name' => 'Petrel RE',
                 'status' => 'enable',
-                'expiry_date' => Carbon::createFromFormat('d-M-Y', '01-Jan-2027'),
+                'expiry_date' => now()->addDays(10), // Coming Soon (Yellow)
                 'total_seats' => 10,
                 'used_seats' => 4
             ],
@@ -90,7 +100,7 @@ class DemoDataSeeder extends Seeder
                 'version' => '2023.1',
                 'application_name' => 'Techlog',
                 'status' => 'enable',
-                'expiry_date' => Carbon::createFromFormat('d-M-Y', '15-Dec-2026'),
+                'expiry_date' => now()->addMonths(6), // Long (Green)
                 'total_seats' => 8,
                 'used_seats' => 1
             ],
@@ -100,7 +110,7 @@ class DemoDataSeeder extends Seeder
                 'version' => '2023.1',
                 'application_name' => 'SeisEarth',
                 'status' => 'enable',
-                'expiry_date' => Carbon::createFromFormat('d-M-Y', '01-Jun-2026'),
+                'expiry_date' => Carbon::create(2030, 1, 1), // Dummy Permanent (Green)
                 'total_seats' => 3,
                 'used_seats' => 0
             ],
@@ -110,34 +120,37 @@ class DemoDataSeeder extends Seeder
                 'version' => '2022.2',
                 'application_name' => 'Eclipse',
                 'status' => 'enable',
-                'expiry_date' => Carbon::createFromFormat('d-M-Y', '01-Oct-2026'),
+                'expiry_date' => now()->addDays(20), // Coming Soon (Yellow)
                 'total_seats' => 15,
                 'used_seats' => 7
             ],
         ];
 
         foreach ($licenses as $licData) {
+            $currentServer = ($licData['vendor'] === 'lgcx') ? $serverJKT : $serverBPN;
+            $licData['used_seats'] = rand(0, $licData['total_seats'] + 2);
             $license = License::updateOrCreate(
                 ['license_name' => $licData['license_name'], 'vendor' => $licData['vendor'], 'version' => $licData['version']],
                 array_merge($licData, [
-                    'license_server_id' => $server->id,
+                    'license_server_id' => $currentServer->id,
                     'created_by' => $admin->id,
                 ])
             );
 
-            // Add some dummy usage logs only if none exist
-            if ($license->logs()->count() === 0) {
-                $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
-                for ($j = 0; $j < rand(2, 5); $j++) {
-                    $username = $usernames[array_rand($usernames)];
-                    LicenseLog::create([
-                        'license_id'   => $license->id,
-                        'event_type'   => 'checkout',
-                        'event_detail' => "User '{$username}' checked out feature",
-                        'user_count'   => rand(1, 10),
-                        'recorded_at'  => now()->subMinutes(rand(10, 500)),
-                    ]);
-                }
+            // Add fresh usage logs with IPs
+            $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
+            $ips = ($licData['vendor'] === 'lgcx') ? ['10.10.1.', '10.30.1.'] : ['10.20.1.'];
+            for ($j = 0; $j < rand(2, 5); $j++) {
+                $username = $usernames[array_rand($usernames)];
+                $baseIp = $ips[array_rand($ips)];
+                LicenseLog::create([
+                    'license_id' => $license->id,
+                    'event_type' => 'checkout',
+                    'event_detail' => "User '{$username}' checked out feature",
+                    'user_count' => rand(1, 10),
+                    'recorded_at' => now()->subMinutes(rand(10, 500)),
+                    'ip_address' => $baseIp . rand(100, 254),
+                ]);
             }
         }
 
@@ -157,7 +170,7 @@ class DemoDataSeeder extends Seeder
             ['license_name' => 'WELLPLAN_CEMENTING', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
             ['license_name' => 'WELLPLAN_HYDRAULICS', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
             ['license_name' => 'WELLPLAN_TORQUE_DRAG', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
-            
+
             ['license_name' => 'CEMENT', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
             ['license_name' => 'COMPASS_SURV_PLAN_AC', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
             ['license_name' => 'DATA_ANALYZER', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 2],
@@ -170,18 +183,45 @@ class DemoDataSeeder extends Seeder
             ['license_name' => 'TORQUEDRAG', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
         ];
 
+        $serverSBY = LicenseServer::create([
+            'server_name' => 'LIC-SVR-SBY-01',
+            'hostname' => 'licsrv-sby.application.local',
+            'ip_address' => '10.30.1.100',
+            'port' => 27002,
+            'os_type' => 'Windows Server 2022',
+            'location' => 'Surabaya',
+            'status' => 'active',
+        ]);
+
         foreach ($additionalFeatures as $feat) {
-            License::updateOrCreate(
+            $currentServer = ($feat['vendor'] === 'licsrv') ? $serverSBY : $serverJKT;
+            $license = License::updateOrCreate(
                 ['license_name' => $feat['license_name'], 'vendor' => $feat['vendor'], 'version' => $feat['version']],
                 array_merge($feat, [
                     'application_name' => 'Landmark Suite',
                     'status' => 'enable',
-                    'expiry_date' => Carbon::createFromFormat('d-M-Y', '01-Jan-2030'),
-                    'license_server_id' => $server->id,
+                    'expiry_date' => Carbon::create(2030, 1, 1),
+                    'license_server_id' => $currentServer->id,
                     'created_by' => $admin->id,
-                    'used_seats' => rand(0, $feat['total_seats']),
+                    'used_seats' => rand(0, $feat['total_seats'] + 1),
                 ])
             );
+
+            // Add fresh usage logs with IPs
+            $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
+            $ips = ($feat['vendor'] === 'licsrv') ? ['10.30.1.'] : ['10.10.1.', '10.20.1.'];
+            for ($j = 0; $j < rand(2, 5); $j++) {
+                $username = $usernames[array_rand($usernames)];
+                $baseIp = $ips[array_rand($ips)];
+                LicenseLog::create([
+                    'license_id' => $license->id,
+                    'event_type' => 'checkout',
+                    'event_detail' => "User '{$username}' checked out feature",
+                    'user_count' => rand(1, 10),
+                    'recorded_at' => now()->subMinutes(rand(10, 500)),
+                    'ip_address' => $baseIp . rand(100, 254),
+                ]);
+            }
         }
 
         // ─── Storage Devices ──────────────────────────────────────────────

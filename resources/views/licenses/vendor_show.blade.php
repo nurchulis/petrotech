@@ -35,6 +35,27 @@
         .modal-blur {
             backdrop-filter: blur(4px);
         }
+
+        .hover-bg-light:hover {
+            background-color: rgba(32, 107, 196, 0.03) !important;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .transition-transform {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        [aria-expanded="true"] .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .bg-light-lt {
+            background-color: #f8fafc !important;
+        }
+
+        .border-dashed {
+            border-style: dashed !important;
+        }
     </style>
 @endpush
 
@@ -46,8 +67,9 @@
                     <div class="d-flex justify-content-between align-items-center w-full">
                         <div>
                             <h2 class="card-title h3 mb-1 text-primary fw-bold">Vendor: {{ $vendor }}</h2>
-                            <p class="text-muted small mb-0">Server: {{ $server?->hostname }} ({{ $server?->ip_address }})
-                                <span class="badge bg-success-lt ms-1">UP</span></p>
+                            <p class="text-dark small mb-0">Server: {{ $server?->hostname }} ({{ $server?->ip_address }})
+                                <span class="badge bg-success-lt ms-1">UP</span>
+                            </p>
                         </div>
                         <a href="{{ route('admin.licenses.index') }}" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-chevron-left me-1"></i> Back to List
@@ -82,52 +104,122 @@
                         <div class="table-responsive">
                             <table class="table table-vcenter table-hover card-table">
                                 <thead>
-                                    <tr>
-                                        <th>Feature Name</th>
-                                        <th>Application</th>
-                                        <th>Capacity</th>
-                                        <th>In Use</th>
-                                        <th>Expiry</th>
-                                        <th>Status</th>
+                                    <tr class="text-dark">
+                                        <th class="fw-bold">Feature Name</th>
+                                        <th class="fw-bold">Capacity</th>
+                                        <th class="fw-bold">In Use</th>
+                                        <th class="fw-bold">Expiry</th>
+                                        <th class="fw-bold">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($features as $f)
-                                        <tr>
-                                            <td class="fw-bold text-dark">{{ $f->license_name }}</td>
-                                            <td><span class="text-muted small">{{ $f->application_name }}</span></td>
+                                        <tr class="cursor-pointer hover-bg-light" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#details-{{ $f->id }}"
+                                            aria-expanded="false"
+                                            title="Click to view active users">
+                                            <td class=" text-dark">{{ $f->license_name }}</td>
+                                            <!-- <td><span class="text-muted small">{{ $f->application_name }}</span></td> -->
                                             <td>{{ $f->total_seats }} seats</td>
                                             <td style="width: 250px;">
                                                 @php
-                                                    $usage = $f->current_usage;
+                                                    $usage = $f->used_seats;
                                                     $percent = $f->total_seats > 0 ? ($usage / $f->total_seats) * 100 : 0;
                                                     $colorClass = $percent > 90 ? 'bg-danger' : ($percent > 70 ? 'bg-warning' : 'bg-success');
+                                                    $barWidth = min($percent, 100);
                                                 @endphp
                                                 <div class="d-flex align-items-center">
                                                     <div class="progress progress-xs w-full me-2" data-bs-toggle="tooltip"
                                                         data-bs-html="true"
-                                                        title="<strong>{{ $usage }} / {{ $f->total_seats }}</strong> seats in use<br><small class='text-muted'>{{ count($f->active_checkouts ?? []) }} active checkouts</small>">
+                                                        title="<strong>{{ $usage }} / {{ $f->total_seats }}</strong> seats in use<br><small class='text-dark opacity-75'>{{ count($f->active_checkouts ?? []) }} active checkouts</small>">
                                                         <div class="progress-bar {{ $colorClass }}"
-                                                            style="width: {{ $percent }}%"></div>
+                                                            style="width: {{ $barWidth }}%"></div>
                                                     </div>
-                                                    <span
-                                                        class="small fw-bold {{ $percent > 90 ? 'text-danger' : '' }}">{{ $usage }}</span>
+                                                    <span class="fw-bold text-dark">{{ $usage }}</span>
                                                 </div>
                                             </td>
                                             <td>
-                                                @if($f->expiry_date->format('Y') == '0000' || $f->expiry_date->format('Y') == '2030')
-                                                    <span class="badge bg-purple-lt">Permanent</span>
-                                                @else
-                                                    <span
-                                                        class="small {{ $f->expiry_date->isPast() ? 'text-danger fw-bold' : '' }}">
-                                                        {{ $f->expiry_date->format('d M Y') }}
-                                                    </span>
-                                                @endif
+                                                @php
+                                                    $expiry = $f->expiry_date;
+                                                    $displayDate = $expiry->format('d M Y');
+
+                                                    $now = now();
+                                                    $diffInDays = $now->diffInDays($expiry, false);
+
+                                                    $dotColor = 'bg-success'; // Long expiry (Green)
+                                                    if ($expiry->isPast()) {
+                                                        $dotColor = 'bg-danger'; // Expired (Red)
+                                                    } elseif ($diffInDays <= 30) {
+                                                        $dotColor = 'bg-warning'; // Coming Soon (Yellow)
+                                                    }
+                                                @endphp
+                                                <div class="d-flex align-items-center small text-dark">
+                                                    <span class="badge {{ $dotColor }} badge-empty me-1 shadow-sm"></span>
+                                                    {{ $displayDate }}
+                                                </div>
                                             </td>
                                             <td>
-                                                <span
-                                                    class="badge {{ $f->status == 'enable' ? 'bg-success' : 'bg-secondary' }} badge-empty me-1"></span>
+                                                <span class="badge {{ $f->status == 'enable' ? 'bg-success' : 'bg-secondary' }} badge-empty me-1"></span>
                                                 <span class="small text-capitalize">{{ $f->status }}d</span>
+                                                <i class="fas fa-chevron-down ms-2 opacity-50 transition-transform"></i>
+                                            </td>
+                                        </tr>
+                                        <tr class="collapse border-0" id="details-{{ $f->id }}">
+                                            <td colspan="5" class="p-0 border-0">
+                                                <div class="p-3 bg-light-lt border-bottom">
+                                                    <div class="card shadow-none border-dashed mb-0">
+                                                        <div class="card-header py-2 bg-transparent">
+                                                            <h4 class="card-title text-muted small fw-bold">Active User Details ({{ $f->license_name }})</h4>
+                                                        </div>
+                                                        <div class="card-body p-0">
+                                                            @if(count($f->active_checkouts ?? []) > 0)
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-vcenter table-sm card-table">
+                                                                        <thead>
+                                                                            <tr class="text-dark bg-light-lt">
+                                                                                <th class="fw-bold py-2">Seat</th>
+                                                                                <th class="fw-bold py-2">Username</th>
+                                                                                <th class="fw-bold py-2">IP Location</th>
+                                                                                <th class="fw-bold py-2">Checkin At</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @foreach($f->active_checkouts as $index => $checkout)
+                                                                                @php
+                                                                                    $location = 'Remote';
+                                                                                    if (str_starts_with($checkout->ip_address, '10.10')) $location = 'Jakarta';
+                                                                                    elseif (str_starts_with($checkout->ip_address, '10.20')) $location = 'Balikpapan';
+                                                                                    elseif (str_starts_with($checkout->ip_address, '10.30')) $location = 'Surabaya';
+                                                                                @endphp
+                                                                                <tr>
+                                                                                    <td><span class="badge bg-blue-lt">Seat {{ $index + 1 }}</span></td>
+                                                                                    <td class="fw-bold text-dark">{{ $checkout->username }}</td>
+                                                                                    <td>
+                                                                                        <div class="text-dark small">{{ $checkout->ip_address }}</div>
+                                                                                        <div class="text-muted" style="font-size: 0.7rem;">{{ $location }}</div>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div class="text-dark small fw-bold">
+                                                                                            {{ $checkout->recorded_at->format('H:i') }}
+                                                                                        </div>
+                                                                                        <div class="text-dark opacity-50" style="font-size: 0.7rem;">
+                                                                                            {{ $checkout->recorded_at->diffForHumans() }}
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            @else
+                                                                <div class="p-3 text-center text-muted small">
+                                                                    No active checkouts found or usage data unavailable.
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
@@ -138,6 +230,20 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="card-footer bg-light-lt py-1">
+                            <div class="d-flex flex-wrap align-items-center gap-3 small text-dark">
+                                <span class="fw-bold"><i class="fas fa-info-circle me-1 opacity-50"></i> Expiry Status
+                                    Legend:</span>
+                                <span class="d-flex align-items-center"><span
+                                        class="badge bg-danger badge-empty me-1 shadow-sm"></span> Expired</span>
+                                <span class="d-flex align-items-center"><span
+                                        class="badge bg-warning badge-empty me-1 shadow-sm"></span> Coming soon (&le; 30
+                                    days)</span>
+                                <span class="d-flex align-items-center"><span
+                                        class="badge bg-success badge-empty me-1 shadow-sm"></span> Long-term (2030 or &gt;
+                                    30 days)</span>
+                            </div>
                         </div>
                     </div>
 
@@ -163,9 +269,9 @@
                                                     <span class="small fw-bold">{{ $log->username }}</span>
                                                 </div>
                                             </td>
-                                            <td><span class="small text-muted">{{ $log->license_name ?? 'Unknown' }}</span></td>
+                                            <td><span class="small text-dark">{{ $log->license_name ?? 'Unknown' }}</span></td>
                                             <td><span
-                                                    class="small">{{ $log->timestamp ? $log->timestamp->format('d M Y H:i') : 'Unknown' }}</span>
+                                                    class="small text-dark">{{ $log->timestamp ? $log->timestamp->format('d M Y H:i') : 'Unknown' }}</span>
                                             </td>
                                             <td>
                                                 <span
