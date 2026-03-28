@@ -23,23 +23,21 @@ class LicenseService
 
     public function listVendors(array $filters = []): LengthAwarePaginator
     {
-        // Group by server and vendor to show "Vendors" on the main page
-        // We use a raw select to count features per vendor
-
-        return License::select('vendor', 'license_server_id', \DB::raw('count(*) as features_count'))
-            ->with('server')
-            ->whereNotNull('vendor')
-            ->groupBy('vendor', 'license_server_id')
+        return \App\Models\Vendor::with('server')
+            ->withCount('licenses as features_count')
             ->when($filters['search'] ?? null, function ($q, $s) {
-                $q->where('vendor', 'ilike', "%{$s}%");
+                $q->where('name', 'ilike', "%{$s}%");
+            })
+            ->when($filters['status'] ?? null, function ($q, $s) {
+                $q->where('status', $s);
             })
             ->paginate(15);
     }
 
-    public function getVendorDetails(int $serverId, string $vendorName): array
+    public function getVendorDetails(int $serverId, int $vendorId): array
     {
         $features = License::where('license_server_id', $serverId)
-            ->where('vendor', $vendorName)
+            ->where('vendor_id', $vendorId)
             ->get();
 
         $features->each(function ($f) {
@@ -64,6 +62,7 @@ class LicenseService
         });
 
         $server = \App\Models\LicenseServer::find($serverId);
+        $vendor = \App\Models\Vendor::find($vendorId);
 
         // Authorized users (usernames) for these features
         $accessRecords = LicenseUserAccess::whereIn('license_id', $features->pluck('id'))
@@ -95,7 +94,7 @@ class LicenseService
             });
 
         return [
-            'vendor' => $vendorName,
+            'vendor' => $vendor,
             'server' => $server,
             'features' => $features,
             'authorizedUsers' => $authorizedUsers,

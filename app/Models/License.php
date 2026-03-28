@@ -15,7 +15,7 @@ class License extends Model
     use HasFactory, LogsActivity;
 
     protected $fillable = [
-        'license_name', 'application_name', 'vendor', 'version', 'total_seats', 'used_seats',
+        'license_name', 'application_name', 'vendor_id', 'version', 'total_seats', 'used_seats',
         'license_key', 'status', 'expiry_date', 'log_file_path', 'license_server_id', 'notes', 'created_by',
     ];
 
@@ -32,6 +32,11 @@ class License extends Model
     public function server(): BelongsTo
     {
         return $this->belongsTo(LicenseServer::class, 'license_server_id');
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class, 'vendor_id');
     }
 
     public function creator(): BelongsTo

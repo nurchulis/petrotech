@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\{Vm, VdiSession, License, LicenseServer, LicenseLog, VmMetric, StorageDevice, StorageMetric, Ticket, TicketComment, User};
+use App\Models\{Vm, VdiSession, License, LicenseServer, LicenseLog, VmMetric, StorageDevice, StorageMetric, Ticket, TicketComment, User, Vendor};
 use Carbon\Carbon;
 
 class DemoDataSeeder extends Seeder
@@ -72,6 +72,10 @@ class DemoDataSeeder extends Seeder
             'status' => 'active',
         ]);
 
+        // ─── Vendors ───────────────────────────────────────────────────────
+        $vendorLgcx = Vendor::create(['name' => 'lgcx', 'description' => 'LGCX Software', 'license_server_id' => $serverJKT->id]);
+        $vendorDaemon = Vendor::create(['name' => 'DAEMON', 'description' => 'Daemon Software', 'license_server_id' => $serverJKT->id]);
+
         // ─── Licenses (Features) ──────────────────────────────────────────
         $licenses = [
             [
@@ -127,10 +131,17 @@ class DemoDataSeeder extends Seeder
         ];
 
         foreach ($licenses as $licData) {
+            $vendorId = match ($licData['vendor']) {
+                'lgcx' => $vendorLgcx->id,
+                'DAEMON' => $vendorDaemon->id,
+                default => null,
+            };
             $currentServer = ($licData['vendor'] === 'lgcx') ? $serverJKT : $serverBPN;
             $licData['used_seats'] = rand(0, $licData['total_seats'] + 2);
+            $vendorName = $licData['vendor'];
+            unset($licData['vendor']);
             $license = License::updateOrCreate(
-                ['license_name' => $licData['license_name'], 'vendor' => $licData['vendor'], 'version' => $licData['version']],
+                ['license_name' => $licData['license_name'], 'vendor_id' => $vendorId, 'version' => $licData['version']],
                 array_merge($licData, [
                     'license_server_id' => $currentServer->id,
                     'created_by' => $admin->id,
@@ -139,7 +150,7 @@ class DemoDataSeeder extends Seeder
 
             // Add fresh usage logs with IPs
             $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
-            $ips = ($licData['vendor'] === 'lgcx') ? ['10.10.1.', '10.30.1.'] : ['10.20.1.'];
+            $ips = ($vendorName === 'lgcx') ? ['10.10.1.', '10.30.1.'] : ['10.20.1.'];
             for ($j = 0; $j < rand(2, 5); $j++) {
                 $username = $usernames[array_rand($usernames)];
                 $baseIp = $ips[array_rand($ips)];
@@ -193,10 +204,19 @@ class DemoDataSeeder extends Seeder
             'status' => 'active',
         ]);
 
+        $vendorLicsrv = Vendor::create(['name' => 'licsrv', 'description' => 'License Server Vendor', 'license_server_id' => $serverSBY->id]);
+
         foreach ($additionalFeatures as $feat) {
+            $vendorId = match ($feat['vendor']) {
+                'lgcx' => $vendorLgcx->id,
+                'licsrv' => $vendorLicsrv->id,
+                default => null,
+            };
             $currentServer = ($feat['vendor'] === 'licsrv') ? $serverSBY : $serverJKT;
+            $vendorName = $feat['vendor'];
+            unset($feat['vendor']);
             $license = License::updateOrCreate(
-                ['license_name' => $feat['license_name'], 'vendor' => $feat['vendor'], 'version' => $feat['version']],
+                ['license_name' => $feat['license_name'], 'vendor_id' => $vendorId, 'version' => $feat['version']],
                 array_merge($feat, [
                     'application_name' => 'Landmark Suite',
                     'status' => 'enable',
@@ -209,7 +229,7 @@ class DemoDataSeeder extends Seeder
 
             // Add fresh usage logs with IPs
             $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
-            $ips = ($feat['vendor'] === 'licsrv') ? ['10.30.1.'] : ['10.10.1.', '10.20.1.'];
+            $ips = ($vendorName === 'licsrv') ? ['10.30.1.'] : ['10.10.1.', '10.20.1.'];
             for ($j = 0; $j < rand(2, 5); $j++) {
                 $username = $usernames[array_rand($usernames)];
                 $baseIp = $ips[array_rand($ips)];

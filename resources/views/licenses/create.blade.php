@@ -37,7 +37,16 @@
                     <select id="license_server_id" name="license_server_id" class="form-select">
                         <option value="">— None —</option>
                         @foreach($servers as $server)
-                        <option value="{{ $server->id }}" {{ old('license_server_id')==$server->id?'selected':'' }}>{{ $server->server_name }}</option>
+                        <option value="{{ $server->id }}" {{ old('license_server_id', request('server_id')) == $server->id ? 'selected' : '' }}>{{ $server->server_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Vendor *</label>
+                    <select id="vendor_id" name="vendor_id" class="form-select" required>
+                        <option value="">— Select Vendor —</option>
+                        @foreach($vendors as $vendor)
+                        <option value="{{ $vendor->id }}" {{ old('vendor_id', request('vendor_id')) == $vendor->id ? 'selected' : '' }}>{{ $vendor->name }}</option>
                         @endforeach
                     </select>
                 </div>

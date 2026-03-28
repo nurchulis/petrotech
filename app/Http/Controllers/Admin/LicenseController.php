@@ -24,10 +24,10 @@ class LicenseController extends Controller
         return view('licenses.index', compact('vendors', 'expiring'));
     }
 
-    public function vendorShow(int $serverId, string $vendorName): View
+    public function vendorShow(int $serverId, int $vendorId): View
     {
         $this->authorize('viewAny', License::class);
-        $data = $this->service->getVendorDetails($serverId, $vendorName);
+        $data = $this->service->getVendorDetails($serverId, $vendorId);
 
         return view('licenses.vendor_show', $data);
     }
@@ -40,12 +40,12 @@ class LicenseController extends Controller
             'license_ids' => 'required|array',
             'license_ids.*' => 'exists:licenses,id',
             'server_id' => 'required|exists:license_servers,id',
-            'vendor' => 'required|string',
+            'vendor_id' => 'required|exists:vendors,id',
         ]);
 
         // Get all candidate license IDs for this vendor to scope the sync
         $scopeLicenseIds = License::where('license_server_id', $data['server_id'])
-            ->where('vendor', $data['vendor'])
+            ->where('vendor_id', $data['vendor_id'])
             ->pluck('id')
             ->toArray();
 
@@ -75,11 +75,11 @@ class LicenseController extends Controller
         $data = $request->validate([
             'username' => 'required|string',
             'server_id' => 'required|exists:license_servers,id',
-            'vendor' => 'required|string',
+            'vendor_id' => 'required|exists:vendors,id',
         ]);
 
         $scopeLicenseIds = License::where('license_server_id', $data['server_id'])
-            ->where('vendor', $data['vendor'])
+            ->where('vendor_id', $data['vendor_id'])
             ->pluck('id')
             ->toArray();
 
@@ -93,7 +93,8 @@ class LicenseController extends Controller
     {
         $this->authorize('create', License::class);
         $servers = LicenseServer::all();
-        return view('licenses.create', compact('servers'));
+        $vendors = \App\Models\Vendor::all();
+        return view('licenses.create', compact('servers', 'vendors'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -102,6 +103,7 @@ class LicenseController extends Controller
         $data = $request->validate([
             'license_name'      => 'required|string|max:255',
             'application_name'  => 'required|string|max:255',
+            'vendor_id'         => 'required|exists:vendors,id',
             'license_key'       => 'nullable|string',
             'status'            => 'required|in:enable,disable',
             'expiry_date'       => 'required|date',
@@ -125,7 +127,8 @@ class LicenseController extends Controller
     {
         $this->authorize('update', $license);
         $servers = LicenseServer::all();
-        return view('licenses.edit', compact('license', 'servers'));
+        $vendors = \App\Models\Vendor::all();
+        return view('licenses.edit', compact('license', 'servers', 'vendors'));
     }
 
     public function update(Request $request, License $license): RedirectResponse
@@ -134,6 +137,7 @@ class LicenseController extends Controller
         $data = $request->validate([
             'license_name'      => 'required|string|max:255',
             'application_name'  => 'required|string|max:255',
+            'vendor_id'         => 'required|exists:vendors,id',
             'status'            => 'required|in:enable,disable',
             'expiry_date'       => 'required|date',
             'license_server_id' => 'nullable|exists:license_servers,id',

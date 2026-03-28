@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Vendor Detail: ' . $vendor)
-@section('breadcrumb', 'Administration / License Management / ' . $vendor)
+@section('title', 'Vendor Detail: ' . $vendor->name)
+@section('breadcrumb', 'Administration / License Management / ' . $vendor->name)
 
 @php
     $activeTab = session('active_tab', 'features');
@@ -66,14 +66,21 @@
                 <div class="card-header border-bottom bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center w-full">
                         <div>
-                            <h2 class="card-title h3 mb-1 text-primary fw-bold">Vendor: {{ $vendor }}</h2>
+                            <h2 class="card-title h3 mb-1 text-primary fw-bold">Vendor: {{ $vendor->name }}</h2>
                             <p class="text-dark small mb-0">Server: {{ $server?->hostname }} ({{ $server?->ip_address }})
                                 <span class="badge bg-success-lt ms-1">UP</span>
                             </p>
                         </div>
-                        <a href="{{ route('admin.licenses.index') }}" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-chevron-left me-1"></i> Back to List
-                        </a>
+                        <div class="d-flex gap-2">
+                            @can('create', \App\Models\License::class)
+                            <a href="{{ route('admin.licenses.create', ['vendor_id' => $vendor->id, 'server_id' => $server?->id]) }}" class="btn btn-primary btn-sm">
+                                + Add License
+                            </a>
+                            @endcan
+                            <a href="{{ route('admin.licenses.index') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-chevron-left me-1"></i> Back to List
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -306,7 +313,7 @@
                             <form action="{{ route('admin.licenses.access.grant') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="server_id" value="{{ $server?->id }}">
-                                <input type="hidden" name="vendor" value="{{ $vendor }}">
+                                <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
 
                                 <div class="row g-3 align-items-end">
                                     <div class="col-md-4">
@@ -391,7 +398,7 @@
                                                         @csrf
                                                         <input type="hidden" name="username" value="{{ $user->username }}">
                                                         <input type="hidden" name="server_id" value="{{ $server?->id }}">
-                                                        <input type="hidden" name="vendor" value="{{ $vendor }}">
+                                                        <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
                                                         <button type="button" class="btn btn-icon btn-sm btn-outline-danger"
                                                             onclick="triggerDeleteConfirm(this, '{{ $user->username }}')"
                                                             title="Delete All Access">
@@ -423,7 +430,7 @@
                 <form action="{{ route('admin.licenses.access.grant') }}" method="POST">
                     @csrf
                     <input type="hidden" name="server_id" value="{{ $server?->id }}">
-                    <input type="hidden" name="vendor" value="{{ $vendor }}">
+                    <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
 
                     <div class="modal-header">
                         <h5 class="modal-title">Edit Access: <span id="editUsernameLabel"></span></h5>
