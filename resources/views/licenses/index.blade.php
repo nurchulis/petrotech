@@ -42,6 +42,10 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label required">Port</label>
+                            <input type="text" class="form-control" name="port" required placeholder="e.g. 27000">
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label required">Status</label>
                             <select class="form-select" name="status" required>
                                 <option value="enable">Active (Enable)</option>
@@ -95,6 +99,7 @@
             <table class="table table-vcenter card-table">
                 <thead style="background:#f4f7fb">
                     <tr>
+                        <th class="w-1">No.</th>
                         <th>Vendor Name</th>
                         <th>Server</th>
                         <th class="text-center">Total Feature</th>
@@ -106,6 +111,7 @@
                 <tbody>
                     @forelse($vendors as $v)
                         <tr>
+                            <td class="text-muted">{{ $loop->iteration + ($vendors->firstItem() - 1) }}</td>
                             <td>
                                 <div class="d-inline-flex align-items-center">
                                     @if($v->status == 'enable')
@@ -117,7 +123,14 @@
                                 </div>
                             </td>
                             <td>
-                                <code>{{ optional($v->server)->port }}@ {{ optional($v->server)->server_name }}</code>
+                                <div class="d-flex align-items-center">
+                                    <code
+                                        id="server-{{ $v->id }}">{{ $v->port ?? '27000' }}&#64;{{ optional($v->server)->server_name }}</code>
+                                    <button class="btn btn-icon btn-ghost-primary btn-sm ms-2 border-0"
+                                        onclick="copyToClipboard('server-{{ $v->id }}', this)" title="Copy Server Info">
+                                        <i class="fas fa-copy" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                </div>
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-blue-lt text-blue">{{ $v->features_count }}</span>
@@ -134,7 +147,7 @@
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
                                     data-bs-target="#editVendorModal"
-                                    onclick="openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ $v->license_server_id }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
+                                    onclick="openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ $v->license_server_id }}', '{{ $v->port }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
                                     Edit
                                 </button>
                                 <a href="{{ route('admin.licenses.vendor', $v->id) }}"
@@ -183,6 +196,10 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label required">Port</label>
+                            <input type="text" class="form-control" name="port" id="edit_vendor_port" required>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label required">Status</label>
                             <select class="form-select" name="status" id="edit_vendor_status" required>
                                 <option value="enable">Active (Enable)</option>
@@ -205,12 +222,25 @@
     </div>
 
     <script>
-        function openEditVendorModal(id, name, serverId, status, description) {
+        function openEditVendorModal(id, name, serverId, port, status, description) {
             document.getElementById('editVendorForm').action = '/admin/vendors/' + id;
             document.getElementById('edit_vendor_name').value = name;
             document.getElementById('edit_vendor_server').value = serverId;
+            document.getElementById('edit_vendor_port').value = port;
             document.getElementById('edit_vendor_status').value = status;
             document.getElementById('edit_vendor_description').value = description;
+        }
+
+        function copyToClipboard(id, btn) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = btn.querySelector('i');
+                const originalClass = icon.className;
+                icon.className = 'fas fa-check text-success';
+                setTimeout(() => {
+                    icon.className = originalClass;
+                }, 2000);
+            });
         }
     </script>
 @endsection

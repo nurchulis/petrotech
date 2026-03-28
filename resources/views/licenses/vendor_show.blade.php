@@ -110,7 +110,15 @@
                                 VENDOR: {{ $vendor->name }}
                             </h2>
                             <div class="d-flex align-items-center flex-wrap gap-2 text-dark small">
-                                <span>Server: {{ $server?->hostname }} ({{ $server?->ip_address }})</span>
+                                <span>Server: 
+                                    <code id="server-address">{{ $vendor->port ?? '27000' }}&#64;{{ $server?->hostname }}</code>
+                                    <button class="btn btn-icon btn-ghost-primary btn-sm ms-1 border-0" 
+                                        onclick="copyToClipboard('server-address', this)"
+                                        title="Copy Server Info">
+                                        <i class="fas fa-copy" style="font-size: 0.65rem;"></i>
+                                    </button>
+                                </span>
+                                ({{ $server?->ip_address }})
                                 <span class="badge {{ $vendor->status == 'enable' ? 'bg-success-lt text-success' : 'bg-danger-lt text-danger' }}">
                                     {{ $vendor->status == 'enable' ? 'UP' : 'DOWN' }}
                                 </span>
@@ -329,16 +337,20 @@
                                 </thead>
                                 <tbody>
                                     @forelse($features as $f)
-                                        <tr class="cursor-pointer hover-bg-light" 
-                                            data-bs-toggle="collapse" 
-                                            data-bs-target="#details-{{ $f->id }}"
-                                            aria-expanded="false"
-                                            title="Click to view active users">
-                                            <td class="text-center text-muted fw-bold small" style="width: 50px;">{{ $loop->iteration }}</td>
-                                            <td class=" text-dark">{{ $f->license_name }}</td>
-                                            <!-- <td><span class="text-muted small">{{ $f->application_name }}</span></td> -->
-                                            <td>{{ $f->total_seats }} seats</td>
-                                            <td style="width: 250px;">
+                                        <tr class="cursor-pointer hover-bg-light" title="Click to view active users">
+                                            <td class="text-center text-muted fw-bold small" style="width: 50px;" data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">{{ $loop->iteration }}</td>
+                                            <td class="text-dark" data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">
+                                                <div class="d-flex align-items-center">
+                                                    <span class="fw-bold">{{ $f->license_name }}</span>
+                                                    @if($f->version)
+                                                        <span class="badge bg-blue-lt ms-2 border-0 fw-normal" style="font-size: 0.65rem;">
+                                                            v{{ $f->version }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">{{ $f->total_seats }} seats</td>
+                                            <td style="width: 250px;" data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">
                                                 @php
                                                     $usage = $f->used_seats;
                                                     $percent = $f->total_seats > 0 ? ($usage / $f->total_seats) * 100 : 0;
@@ -355,7 +367,7 @@
                                                     <span class="fw-bold text-dark">{{ $usage }}</span>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">
                                                 @php
                                                     $expiry = $f->expiry_date;
                                                     $displayDate = $expiry->format('d M Y');
@@ -375,7 +387,7 @@
                                                     {{ $displayDate }}
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">
                                                 <span class="badge {{ $f->status == 'enable' ? 'bg-success' : 'bg-secondary' }} badge-empty me-1"></span>
                                                 <span class="small text-capitalize">{{ $f->status }}d</span>
                                                 <i class="fas fa-chevron-down ms-2 opacity-50 transition-transform {{ $loop->first ? 'feature-list-tooltip' : '' }}"
@@ -436,7 +448,7 @@
                                                                                             <span class="badge bg-blue-lt">Seat {{ $index + 1 }}</span>
                                                                                         </div>
                                                                                     </td>
-                                                                                    <td class="fw-bold text-dark">{{ $checkout->username }}</td>
+                                                                                    <td class="fw-bold text-dark"><div class="d-flex align-items-center"><i class="fas fa-user-circle text-muted me-2" style="font-size: 0.85rem;"></i>{{ $checkout->username }}</div></td>
                                                                                     <td>
                                                                                         <div class="text-dark small">{{ $checkout->ip_address }}</div>
                                                                                         <div class="text-muted" style="font-size: 0.7rem;">{{ $location }}</div>
@@ -999,6 +1011,18 @@
                     progressBars.forEach(bar => {
                         const targetWidth = parseFloat(bar.getAttribute('data-target-width')) || 0;
                         bar.style.setProperty('--target-width', targetWidth + '%');
+                    });
+                }
+
+                window.copyToClipboard = function(id, btn) {
+                    const text = document.getElementById(id).innerText;
+                    navigator.clipboard.writeText(text).then(() => {
+                        const icon = btn.querySelector('i');
+                        const originalClass = icon.className;
+                        icon.className = 'fas fa-check text-success';
+                        setTimeout(() => {
+                            icon.className = originalClass;
+                        }, 2000);
                     });
                 }
 

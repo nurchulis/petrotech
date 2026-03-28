@@ -12,7 +12,9 @@ use Illuminate\View\View;
 
 class LicenseController extends Controller
 {
-    public function __construct(private LicenseService $service) {}
+    public function __construct(private LicenseService $service)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -52,7 +54,7 @@ class LicenseController extends Controller
         $this->service->syncAccess($data['username'], $data['license_ids'], $scopeLicenseIds, auth()->user());
 
         return back()->with('success', "Access for '{$data['username']}' updated successfully.")
-                    ->with('active_tab', 'access');
+            ->with('active_tab', 'access');
     }
 
     public function revokeAccess(Request $request): RedirectResponse
@@ -66,7 +68,7 @@ class LicenseController extends Controller
         $this->service->revokeAccess($data['username'], $data['license_id']);
 
         return back()->with('success', "Access revoked for '{$data['username']}'.")
-                    ->with('active_tab', 'access');
+            ->with('active_tab', 'access');
     }
 
     public function revokeAllAccess(Request $request): RedirectResponse
@@ -86,7 +88,7 @@ class LicenseController extends Controller
         $this->service->revokeAllAccess($data['username'], $scopeLicenseIds);
 
         return back()->with('success', "All access for '{$data['username']}' on this vendor has been removed.")
-                    ->with('active_tab', 'access');
+            ->with('active_tab', 'access');
     }
 
     public function create(): View
@@ -101,19 +103,21 @@ class LicenseController extends Controller
     {
         $this->authorize('create', License::class);
         $data = $request->validate([
-            'license_name'      => 'required|string|max:255',
-            'application_name'  => 'required|string|max:255',
-            'vendor_id'         => 'required|exists:vendors,id',
-            'license_key'       => 'nullable|string',
-            'status'            => 'required|in:enable,disable',
-            'expiry_date'       => 'required|date',
-            'log_file_path'     => 'nullable|string|max:500',
+            'license_name' => 'required|string|max:255',
+            'application_name' => 'required|string|max:255',
+            'vendor_id' => 'required|exists:vendors,id',
+            'version' => 'nullable|string|max:100',
+            'total_seats' => 'required|integer|min:0',
+            'license_key' => 'nullable|string',
+            'status' => 'required|in:enable,disable',
+            'expiry_date' => 'required|date',
+            'log_file_path' => 'nullable|string|max:500',
             'license_server_id' => 'nullable|exists:license_servers,id',
-            'notes'             => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
-        $this->service->create($data, auth()->user());
-        return redirect()->route('admin.licenses.index')->with('success', 'License created successfully.');
+        $license = $this->service->create($data, auth()->user());
+        return redirect()->route('admin.licenses.vendor', $license->vendor_id)->with('success', 'License created successfully.');
     }
 
     public function show(License $license): View
@@ -135,17 +139,20 @@ class LicenseController extends Controller
     {
         $this->authorize('update', $license);
         $data = $request->validate([
-            'license_name'      => 'required|string|max:255',
-            'application_name'  => 'required|string|max:255',
-            'vendor_id'         => 'required|exists:vendors,id',
-            'status'            => 'required|in:enable,disable',
-            'expiry_date'       => 'required|date',
+            'license_name' => 'required|string|max:255',
+            'application_name' => 'required|string|max:255',
+            'vendor_id' => 'required|exists:vendors,id',
+            'version' => 'nullable|string|max:100',
+            'total_seats' => 'required|integer|min:0',
+            'status' => 'required|in:enable,disable',
+            'expiry_date' => 'required|date',
+            'log_file_path' => 'nullable|string|max:500',
             'license_server_id' => 'nullable|exists:license_servers,id',
-            'notes'             => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $this->service->update($license, $data);
-        return redirect()->route('admin.licenses.index')->with('success', 'License updated successfully.');
+        return redirect()->route('admin.licenses.vendor', $license->vendor_id)->with('success', 'License updated successfully.');
     }
 
     public function destroy(License $license): RedirectResponse
@@ -165,21 +172,21 @@ class LicenseController extends Controller
     public function exportLogs(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $this->authorize('viewAny', License::class);
-        
+
         $vendorId = $request->input('vendor_id');
         $data = $this->service->getVendorDetails($vendorId);
         $logs = $data['logs'] ?? collect();
 
         // Create CSV headers
         $headers = ['Username', 'Feature', 'Timestamp', 'Event Type'];
-        
+
         // Create the response
         return response()->streamDownload(function () use ($logs, $headers) {
             $handle = fopen('php://output', 'w');
-            
+
             // Write headers
             fputcsv($handle, $headers);
-            
+
             // Write data rows
             foreach ($logs as $log) {
                 fputcsv($handle, [
@@ -189,7 +196,7 @@ class LicenseController extends Controller
                     ucfirst($log->event_type),
                 ]);
             }
-            
+
             fclose($handle);
         }, 'license-logs-' . now()->format('Y-m-d-His') . '.csv', [
             'Content-Type' => 'text/csv',

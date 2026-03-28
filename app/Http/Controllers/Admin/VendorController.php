@@ -14,6 +14,7 @@ class VendorController extends Controller
             'name' => 'required|string|max:255|unique:vendors,name',
             'description' => 'nullable|string',
             'license_server_id' => 'required|exists:license_servers,id',
+            'port' => 'nullable|string|max:50',
             'status' => 'required|in:enable,disable',
         ]);
 
@@ -28,6 +29,7 @@ class VendorController extends Controller
             'name' => 'required|string|max:255|unique:vendors,name,' . $vendor->id,
             'description' => 'nullable|string',
             'license_server_id' => 'required|exists:license_servers,id',
+            'port' => 'nullable|string|max:50',
             'status' => 'required|in:enable,disable',
         ]);
 
