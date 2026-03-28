@@ -478,8 +478,75 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center py-4 text-muted">No features found for this
-                                                vendor.</td>
+                                            <td colspan="7" class="py-5 border-0">
+                                                <div class="d-flex justify-content-center">
+                                                    <div class="card shadow-sm border-dashed p-4 p-md-5 text-center bg-white" style="max-width: 700px;">
+                                                        {{-- Illustration --}}
+                                                        <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                                                            <div class="bg-light p-3 rounded-3 border">
+                                                                <i class="fas fa-server fa-2x text-muted"></i>
+                                                            </div>
+                                                            <div class="d-flex flex-column align-items-center position-relative" style="width: 80px;">
+                                                                <div class="sync-animation position-relative w-100 mb-2" style="height: 2px; background: #e9ecef;">
+                                                                    <div class="position-absolute bg-primary sync-packet" style="width: 20px; height: 100%;"></div>
+                                                                </div>
+                                                                <i class="fas fa-sync fa-sm text-primary opacity-50"></i>
+                                                            </div>
+                                                            <div class="bg-primary-lt p-3 rounded-3 border border-primary-subtle position-relative">
+                                                                <i class="fas fa-robot fa-2x text-primary"></i>
+                                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info shadow-sm" style="font-size: 0.55rem; padding: 0.35em 0.65em;">
+                                                                    AGENT
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Main Message --}}
+                                                        <h3 class="fw-bold text-dark mb-2">No features detected yet</h3>
+                                                        <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
+                                                            Install the agent on your server to automatically detect and sync available features into this dashboard.
+                                                        </p>
+
+                                                        {{-- Sync Hint --}}
+                                                        <div class="alert alert-info border-0 bg-info-lt py-2 px-3 mb-4 d-inline-block mx-auto small">
+                                                            <i class="fas fa-info-circle me-2"></i> Once the agent is running, data will appear here automatically.
+                                                        </div>
+
+                                                        {{-- Install Instructions --}}
+                                                        <div class="row g-3 text-start mb-4">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold text-uppercase text-muted mb-1"> 
+                                                                    <i class="fab fa-linux me-1"></i> Linux
+                                                                </label>
+                                                                <div class="bg-light p-2 rounded border">
+                                                                    <code class="small text-dark fw-bold">curl -sSL https://agent-install.sh | bash</code>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small fw-bold text-uppercase text-muted mb-1"> 
+                                                                    <i class="fab fa-windows me-1"></i> Windows
+                                                                </label>
+                                                                <div class="bg-light p-2 rounded border">
+                                                                    <code class="small text-dark fw-bold text-break">Invoke-WebRequest -Uri https://agent-install.ps1 -OutFile install.ps1; ./install.ps1</code>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- CTA and Status --}}
+                                                        <div class="d-flex flex-column align-items-center gap-3">
+                                                            <a href="#" class="btn btn-primary btn-sm px-4 shadow-sm">
+                                                                <i class="fas fa-book-open me-2"></i> View Full Installation Guide
+                                                            </a>
+
+                                                            <div class="d-flex justify-content-center align-items-center gap-2 mt-2 text-muted">
+                                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                                    <span class="visually-hidden">Loading...</span>
+                                                                </div>
+                                                                <small class="fw-medium">Waiting for agent connection...</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -547,8 +614,17 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted small italic">No usage logs
-                                                available for this vendor.</td>
+                                            <td colspan="4" class="py-5 border-0">
+                                                <div class="text-center p-4">
+                                                    <div class="bg-light-lt d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px;">
+                                                        <i class="fas fa-history fa-2x text-muted opacity-50"></i>
+                                                    </div>
+                                                    <h4 class="fw-bold text-dark mb-1">No usage history detected</h4>
+                                                    <p class="text-muted small mx-auto" style="max-width: 400px;">
+                                                        Detailed logs of user activity (checkout/checkin) will appear here once the agent starts reporting usage data.
+                                                    </p>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -668,8 +744,20 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center py-4 text-muted small italic">No specific user
-                                                level access configured.</td>
+                                            <td colspan="3" class="py-5 border-0">
+                                                <div class="text-center p-4">
+                                                    <div class="bg-light-lt d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px;">
+                                                        <i class="fas fa-user-shield fa-2x text-muted opacity-50"></i>
+                                                    </div>
+                                                    <h4 class="fw-bold text-dark mb-1">No specific access rules configured</h4>
+                                                    <p class="text-muted small mx-auto" style="max-width: 400px;">
+                                                        By default, all authenticated users may have access depending on server policy. You can grant specific feature access to individual users here.
+                                                    </p>
+                                                    <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="collapse" data-bs-target="#addAccessForm">
+                                                        <i class="fas fa-plus me-1"></i> Grant First Access
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
