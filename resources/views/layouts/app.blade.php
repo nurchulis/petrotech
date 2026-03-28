@@ -6,12 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — Petrotechnical Platform</title>
-    <meta name="description" content="Pertamina UC2 — Unified Petrotechnical Platform">
+    <meta name="description" content="Application UC2 — Unified Petrotechnical Platform">
 
     <!-- Tabler CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css">
     <!-- ApexCharts -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
         :root {
@@ -360,7 +362,7 @@
             <footer class="footer footer-transparent d-print-none"
                 style="border-top:1px solid #e6edf3;padding:.75rem 0">
                 <div class="container-xl text-center text-muted" style="font-size:.8rem">
-                    © {{ date('Y') }} Petrotechnical Platform · Pertamina UC2 Cloud Infrastructure
+                    © {{ date('Y') }} Petrotechnical Platform · Application UC2 Cloud Infrastructure
                 </div>
             </footer>
         </div>

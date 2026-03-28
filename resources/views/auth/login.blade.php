@@ -29,7 +29,7 @@
         <div class="h-100 d-flex flex-column justify-content-center p-5 text-white">
           <div style="max-width: 600px; margin: 0 auto; text-align: center;">
             <h1 class="display-3 fw-bold mb-3">Petrotechnical Platform</h1>
-            <p class="lead" style="color: rgba(255,255,255,0.8)">Pertamina UC2 Cloud Infrastructure<br>Intelligent
+            <p class="lead" style="color: rgba(255,255,255,0.8)">Application UC2 Cloud Infrastructure<br>Intelligent
               Virtual Desktop Access Management</p>
           </div>
         </div>

@@ -85,6 +85,13 @@ class User extends Authenticatable
         return $this->hasMany(TicketComment::class);
     }
 
+    public function accessibleLicenses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(License::class, 'license_user_access')
+                    ->withPivot(['granted_by', 'expires_at'])
+                    ->withTimestamps();
+    }
+
     public function createdLicenses(): HasMany
     {
         return $this->hasMany(License::class, 'created_by');
@@ -96,6 +103,11 @@ class User extends Authenticatable
     }
 
     // Helpers
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     public function getAvatarUrlAttribute(): string
     {
         return $this->avatar

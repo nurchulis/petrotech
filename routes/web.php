@@ -51,9 +51,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::middleware('role:admin|super_admin')->prefix('admin')->name('admin.')->group(function () {
 
             // License Management
+            Route::get('/licenses/vendor/{serverId}/{vendorName}', [LicenseController::class, 'vendorShow'])->name('licenses.vendor');
+            Route::post('/licenses/access/grant', [LicenseController::class, 'grantAccess'])->name('licenses.access.grant');
+            Route::post('/licenses/access/revoke', [LicenseController::class, 'revokeAccess'])->name('licenses.access.revoke');
+            Route::post('/licenses/access/revoke-all', [LicenseController::class, 'revokeAllAccess'])->name('licenses.access.revoke_all');
             Route::resource('licenses', LicenseController::class);
 
-            Route::post('/licenses/{license}/toggle', [LicenseController::class , 'toggle'])->name('licenses.toggle');
+            Route::post('/licenses/{license}/toggle', [LicenseController::class, 'toggle'])->name('licenses.toggle');
 
             // VM Monitoring
             Route::prefix('vm-monitoring')->name('vm-monitoring.')->group(function () {

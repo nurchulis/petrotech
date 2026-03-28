@@ -44,64 +44,42 @@
         <table class="table table-vcenter card-table">
             <thead style="background:#f4f7fb">
                 <tr>
-                    <th>License Name</th>
-                    <th>Application</th>
+                    <th>Vendor Name</th>
                     <th>Server</th>
-                    <th>Expiry Date</th>
+                    <th class="text-center">Total Feature</th>
                     <th>Status</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($licenses as $license)
+                @forelse($vendors as $v)
                 <tr>
                     <td>
-                        <strong>{{ $license->license_name }}</strong>
-                        @if($license->isExpired())
-                            <span class="badge bg-danger-lt text-danger ms-1">EXPIRED</span>
-                        @endif
-                    </td>
-                    <td>{{ $license->application_name }}</td>
-                    <td>{{ $license->server?->server_name ?? '—' }}</td>
-                    <td>
-                        <span class="badge bg-{{ $license->expiry_badge }}-lt text-{{ $license->expiry_badge }}">
-                            {{ $license->expiry_date->format('d M Y') }}
-                        </span>
-                        @if(!$license->isExpired())
-                            <small class="text-muted">({{ $license->days_until_expiry }}d)</small>
-                        @endif
+                        <strong class="text-primary">{{ $v->vendor }}</strong>
                     </td>
                     <td>
-                        <form method="POST" action="{{ route('admin.licenses.toggle', $license) }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="badge border-0 bg-{{ $license->status === 'enable' ? 'success' : 'secondary' }}-lt text-{{ $license->status === 'enable' ? 'success' : 'secondary' }}" title="Click to toggle">
-                                {{ $license->status === 'enable' ? 'Active' : 'Disabled' }}
-                            </button>
-                        </form>
+                        <code>{{ $v->server?->port }}@ {{ $v->server?->server_name }}</code>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-blue-lt text-blue">{{ $v->features_count }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-lt text-success">UP</span>
                     </td>
                     <td class="text-end">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ route('admin.licenses.show', $license) }}" class="btn btn-outline-secondary">View</a>
-                            @can('update', $license)
-                            <a href="{{ route('admin.licenses.edit', $license) }}" class="btn btn-outline-primary">Edit</a>
-                            @endcan
-                            @can('delete', $license)
-                            <form method="POST" action="{{ route('admin.licenses.destroy', $license) }}" onsubmit="return confirm('Delete this license?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger">Delete</button>
-                            </form>
-                            @endcan
-                        </div>
+                        <a href="{{ route('admin.licenses.vendor', [$v->license_server_id, $v->vendor]) }}" class="btn btn-sm btn-outline-primary">
+                            View Detail
+                        </a>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center text-muted py-4">No licenses found.</td></tr>
+                <tr><td colspan="4" class="text-center text-muted py-4">No vendors found.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    @if($licenses->hasPages())
-    <div class="card-footer">{{ $licenses->withQueryString()->links() }}</div>
+    @if($vendors->hasPages())
+    <div class="card-footer">{{ $vendors->withQueryString()->links() }}</div>
     @endif
 </div>
 @endsection

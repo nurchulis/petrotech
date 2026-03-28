@@ -15,12 +15,12 @@ class License extends Model
     use HasFactory, LogsActivity;
 
     protected $fillable = [
-        'license_name', 'application_name', 'license_key', 'status',
-        'expiry_date', 'log_file_path', 'license_server_id', 'notes', 'created_by',
+        'license_name', 'application_name', 'vendor', 'version', 'total_seats', 'used_seats',
+        'license_key', 'status', 'expiry_date', 'log_file_path', 'license_server_id', 'notes', 'created_by',
     ];
 
     protected $casts = [
-        'expiry_date' => 'date',
+        'expiry_date' => 'datetime',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -42,6 +42,13 @@ class License extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(LicenseLog::class);
+    }
+
+    public function allowedUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'license_user_access')
+                    ->withPivot(['granted_by', 'expires_at'])
+                    ->withTimestamps();
     }
 
     // Scopes
@@ -77,6 +84,6 @@ class License extends Model
 
     public function isExpired(): bool
     {
-        return $this->expiry_date->isPast();
+        return $this->expiry_date ? $this->expiry_date->isPast() : false;
     }
 }

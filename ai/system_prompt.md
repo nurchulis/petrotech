@@ -2,7 +2,7 @@
 
 ## Project Identity
 
-You are an AI agent working on the **Petrotechnical Platform UC2**, an internal cloud infrastructure management platform developed for **Pertamina UC2** (an upstream oil and gas subsidiary).
+You are an AI agent working on the **Petrotechnical Platform UC2**, an internal cloud infrastructure management platform developed for **Application UC2** (an upstream oil and gas subsidiary).
 
 The platform provides:
 - **VDI (Virtual Desktop Infrastructure)** — browser-based remote desktop sessions to petrotechnical engineering workstations

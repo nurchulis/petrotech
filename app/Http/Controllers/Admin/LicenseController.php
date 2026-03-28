@@ -17,10 +17,76 @@ class LicenseController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', License::class);
-        $filters  = $request->only(['status', 'search']);
-        $licenses = $this->service->list($filters);
+        $filters = $request->only(['search']);
+        $vendors = $this->service->listVendors($filters);
         $expiring = $this->service->expiringWithinDays(30);
-        return view('licenses.index', compact('licenses', 'expiring'));
+
+        return view('licenses.index', compact('vendors', 'expiring'));
+    }
+
+    public function vendorShow(int $serverId, string $vendorName): View
+    {
+        $this->authorize('viewAny', License::class);
+        $data = $this->service->getVendorDetails($serverId, $vendorName);
+
+        return view('licenses.vendor_show', $data);
+    }
+
+    public function grantAccess(Request $request): RedirectResponse
+    {
+        $this->authorize('viewAny', License::class);
+        $data = $request->validate([
+            'username' => 'required|string|max:255',
+            'license_ids' => 'required|array',
+            'license_ids.*' => 'exists:licenses,id',
+            'server_id' => 'required|exists:license_servers,id',
+            'vendor' => 'required|string',
+        ]);
+
+        // Get all candidate license IDs for this vendor to scope the sync
+        $scopeLicenseIds = License::where('license_server_id', $data['server_id'])
+            ->where('vendor', $data['vendor'])
+            ->pluck('id')
+            ->toArray();
+
+        $this->service->syncAccess($data['username'], $data['license_ids'], $scopeLicenseIds, auth()->user());
+
+        return back()->with('success', "Access for '{$data['username']}' updated successfully.")
+                    ->with('active_tab', 'access');
+    }
+
+    public function revokeAccess(Request $request): RedirectResponse
+    {
+        $this->authorize('viewAny', License::class);
+        $data = $request->validate([
+            'username' => 'required|string',
+            'license_id' => 'required|exists:licenses,id',
+        ]);
+
+        $this->service->revokeAccess($data['username'], $data['license_id']);
+
+        return back()->with('success', "Access revoked for '{$data['username']}'.")
+                    ->with('active_tab', 'access');
+    }
+
+    public function revokeAllAccess(Request $request): RedirectResponse
+    {
+        $this->authorize('viewAny', License::class);
+        $data = $request->validate([
+            'username' => 'required|string',
+            'server_id' => 'required|exists:license_servers,id',
+            'vendor' => 'required|string',
+        ]);
+
+        $scopeLicenseIds = License::where('license_server_id', $data['server_id'])
+            ->where('vendor', $data['vendor'])
+            ->pluck('id')
+            ->toArray();
+
+        $this->service->revokeAllAccess($data['username'], $scopeLicenseIds);
+
+        return back()->with('success', "All access for '{$data['username']}' on this vendor has been removed.")
+                    ->with('active_tab', 'access');
     }
 
     public function create(): View
