@@ -193,7 +193,7 @@ class LicenseController extends Controller
                     $log->username,
                     $log->license_name ?? 'Unknown',
                     $log->timestamp ? $log->timestamp->format('d M Y H:i:s') : 'Unknown',
-                    ucfirst($log->event_type),
+                    str_replace('_', ' ', strtoupper($log->event_type)),
                 ]);
             }
 

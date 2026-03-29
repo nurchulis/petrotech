@@ -331,7 +331,7 @@
                                         <th class="fw-bold">Capacity</th>
                                         <th class="fw-bold">In Use</th>
                                         <th class="fw-bold">Expiry</th>
-                                        <th class="fw-bold">Status</th>
+                                        <th class="fw-bold">List User</th>
                                         <th class="fw-bold text-end">Action</th>
                                     </tr>
                                 </thead>
@@ -388,8 +388,8 @@
                                                 </div>
                                             </td>
                                             <td data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">
-                                                <span class="badge {{ $f->status == 'enable' ? 'bg-success' : 'bg-secondary' }} badge-empty me-1"></span>
-                                                <span class="small text-capitalize">{{ $f->status }}d</span>
+                                                <!-- <span class="badge {{ $f->status == 'enable' ? 'bg-success' : 'bg-secondary' }} badge-empty me-1"></span>
+                                                <span class="small text-capitalize">{{ $f->status }}d</span> -->
                                                 <i class="fas fa-chevron-down ms-2 opacity-50 transition-transform {{ $loop->first ? 'feature-list-tooltip' : '' }}"
                                                    @if($loop->first) 
                                                      id="featureListChevronTooltip"
@@ -606,9 +606,26 @@
                                                     class="small text-dark">{{ $log->timestamp ? $log->timestamp->format('d M Y H:i') : 'Unknown' }}</span>
                                             </td>
                                             <td>
-                                                <span
-                                                    class="badge {{ $log->event_type == 'checkout' ? 'bg-warning-lt text-warning' : 'bg-success-lt text-success' }} small">
-                                                    {{ $log->event_type == 'checkout' ? 'CHECKOUT' : 'CHECKIN' }}
+                                                @php
+                                                    $badgeClass = match($log->event_type) {
+                                                        'checkout' => 'bg-warning-lt text-warning',
+                                                        'checkin' => 'bg-success-lt text-success',
+                                                        'failed_checkout', 'failed_checkin' => 'bg-danger-lt text-danger',
+                                                        'denied' => 'bg-red-lt text-red',
+                                                        default => 'bg-info-lt text-info'
+                                                    };
+                                                    
+                                                    $icon = match($log->event_type) {
+                                                        'checkout' => 'fa-sign-out-alt',
+                                                        'checkin' => 'fa-sign-in-alt',
+                                                        'failed_checkout', 'failed_checkin' => 'fa-exclamation-triangle',
+                                                        'denied' => 'fa-times-circle',
+                                                        default => 'fa-info-circle'
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $badgeClass }} small border-0">
+                                                    <i class="fas {{ $icon }} me-1"></i>
+                                                    {{ str_replace('_', ' ', strtoupper($log->event_type)) }}
                                                 </span>
                                             </td>
                                         </tr>

@@ -5,6 +5,16 @@
 
 
 @section('content')
+    <style>
+        .hover-bg-light:hover {
+            background-color: rgba(32, 107, 196, 0.03) !important;
+            transition: background-color 0.1s ease-in-out;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+    </style>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-0" style="color:#1a3c6b">License Management</h2>
@@ -184,8 +194,9 @@
                             $isOnline = $v->status == 'enable' &&
                                 $v->last_updated &&
                                 $v->last_updated->diffInMinutes(now()) <= 10;
+                            $detailUrl = route('admin.licenses.vendor', $v->id);
                         @endphp
-                        <tr>
+                        <tr onclick="window.location='{{ $detailUrl }}'" style="cursor: pointer;" class="hover-bg-light">
                             <td class="text-muted">{{ $loop->iteration + ($vendors->firstItem() - 1) }}</td>
                             <td>
                                 <div class="d-inline-flex align-items-center">
@@ -202,7 +213,7 @@
                                     <code
                                         id="server-{{ $v->id }}">{{ $v->port ?? '27000' }}&#64;{{ optional($v->server)->server_name }}</code>
                                     <button class="btn btn-icon btn-ghost-primary btn-sm ms-2 border-0"
-                                        onclick="copyToClipboard('server-{{ $v->id }}', this)" title="Copy Server Info">
+                                        onclick="event.stopPropagation(); copyToClipboard('server-{{ $v->id }}', this)" title="Copy Server Info">
                                         <i class="fas fa-copy" style="font-size: 0.7rem;"></i>
                                     </button>
                                 </div>
@@ -231,11 +242,11 @@
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
                                     data-bs-target="#editVendorModal"
-                                    onclick="openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ $v->license_server_id }}', '{{ $v->port }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
+                                    onclick="event.stopPropagation(); openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ $v->license_server_id }}', '{{ $v->port }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
                                     Edit
                                 </button>
                                 <a href="{{ route('admin.licenses.vendor', $v->id) }}"
-                                    class="btn btn-sm btn-outline-primary ms-1">
+                                    class="btn btn-sm btn-outline-primary ms-1" onclick="event.stopPropagation()">
                                     View Detail
                                 </a>
                             </td>
