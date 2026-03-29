@@ -111,7 +111,7 @@
                             </h2>
                             <div class="d-flex align-items-center flex-wrap gap-2 text-dark small">
                                 <span>Server: 
-                                    <code id="server-address">{{ $vendor->port ?? '27000' }}&#64;{{ $server?->hostname }}</code>
+                                    <code id="server-address">{{ $vendor->name_server ?? ($vendor->port ? $vendor->port . '@' . $server?->hostname : 'N/A') }}</code>
                                     <button class="btn btn-icon btn-ghost-primary btn-sm ms-1 border-0" 
                                         onclick="copyToClipboard('server-address', this)"
                                         title="Copy Server Info">
@@ -130,9 +130,14 @@
                         </div>
                         <div class="d-flex gap-2">
                             @can('create', \App\Models\License::class)
-                            <a href="{{ route('admin.licenses.create', ['vendor_id' => $vendor->id, 'server_id' => $server?->id]) }}" class="btn btn-primary btn-sm">
-                                + Add License
-                            </a>
+                                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#editVendorModal"
+                                    onclick="openEditVendorModal({{ $vendor->id }}, '{{ addslashes($vendor->name) }}', '{{ addslashes($vendor->name_server ?? '') }}', '{{ $vendor->license_server_id }}', '{{ $vendor->port }}', '{{ $vendor->status }}', '{{ addslashes($vendor->description ?? '') }}')">
+                                    <i class="fas fa-edit me-1"></i> Edit Vendor
+                                </button>
+                                <a href="{{ route('admin.licenses.create', ['vendor_id' => $vendor->id, 'server_id' => $server?->id]) }}" class="btn btn-primary btn-sm">
+                                    + Add License
+                                </a>
                             @endcan
                             <a href="{{ route('admin.licenses.index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-chevron-left me-1"></i> Back to List
@@ -315,6 +320,13 @@
                                 <i class="fas fa-user-shield me-2 opacity-75"></i> Access Management
                             </a>
                         </li>
+                        <li class="nav-item fw-bold" role="presentation">
+                            <a href="#tabs-trends" class="nav-link {{ $activeTab == 'trends' ? 'active' : '' }}"
+                                data-bs-toggle="tab" aria-selected="{{ $activeTab == 'trends' ? 'true' : 'false' }}"
+                                role="tab">
+                                <i class="fas fa-chart-line me-2 opacity-75"></i> Usage Trends
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -331,8 +343,8 @@
                                         <th class="fw-bold">Capacity</th>
                                         <th class="fw-bold">In Use</th>
                                         <th class="fw-bold">Expiry</th>
-                                        <th class="fw-bold">List User</th>
-                                        <th class="fw-bold text-end">Action</th>
+                                        <th class="fw-bold">Current users</th>
+                                        <!-- <th class="fw-bold text-end">Action</th> -->
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -402,13 +414,13 @@
                                                    @endif>
                                                 </i>
                                             </td>
-                                            <td class="text-end">
+                                            <!-- <td class="text-end">
                                                 @can('update', $f)
                                                 <a href="{{ route('admin.licenses.edit', $f) }}" class="btn btn-sm btn-primary" title="Edit License">
                                                     <i class="fas fa-edit me-1"></i> Edit
                                                 </a>
                                                 @endcan
-                                            </td>
+                                            </td> -->
                                         </tr>
                                         <tr class="collapse border-0" id="details-{{ $f->id }}">
                                             <td colspan="8" class="p-0 border-0">
@@ -781,6 +793,55 @@
                             </table>
                         </div>
                     </div>
+
+                    {{-- Usage Trends Tab --}}
+                    <div class="tab-pane {{ $activeTab == 'trends' ? 'active show' : '' }}" id="tabs-trends"
+                        role="tabpanel">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h3 class="card-title mb-1">Historical Feature Usage</h3>
+                                    <p class="text-muted small mb-0">Monitor seat usage fluctuations and capacity limits over time.</p>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="hourly">Hourly</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn active" data-range="daily">Daily</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="weekly">Weekly</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="monthly">Monthly</button>
+                                </div>
+                            </div>
+
+                            <div class="row g-3" id="trends-charts-container">
+                                @forelse($features as $f)
+                                    <div class="col-md-6">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <div>
+                                                        <span class="badge bg-blue-lt mb-1">{{ $f->license_name }}</span>
+                                                        <div class="small text-muted">Limit: {{ $f->total_seats }} seats</div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="h3 mb-0 fw-bold">{{ $f->used_seats }}</div>
+                                                        <div class="small text-muted">Current</div>
+                                                    </div>
+                                                </div>
+                                                <div id="chart-{{ $f->id }}" style="min-height: 200px;">
+                                                    <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                                                        <div class="spinner-border text-muted opacity-25" role="status"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="col-12 text-center py-5 text-muted">
+                                        No features available to visualize.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -871,6 +932,65 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
+
+    {{-- Edit Vendor Modal --}}
+    <div class="modal modal-blur fade" id="editVendorModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form id="editVendorForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Vendor: {{ $vendor->name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label required">Vendor Name</label>
+                            <input type="text" class="form-control" name="name" id="edit_vendor_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
+                            <input type="text" class="form-control" name="name_server" id="edit_name_server" placeholder="e.g. 2094@LLJOSAJ1">
+                        </div>
+                        @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
+                        <div class="mb-3">
+                            <label class="form-label required">License Server</label>
+                            <select class="form-select" name="license_server_id" id="edit_vendor_server" required>
+                                <option value="">— Select Server —</option>
+                                @foreach (\App\Models\LicenseServer::all() as $srv)
+                                    <option value="{{ $srv->id }}">{{ $srv->server_name }} ({{ $srv->ip_address }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required">Port</label>
+                            <input type="text" class="form-control" name="port" id="edit_vendor_port" required>
+                        </div>
+                        @endif
+                        <div class="mb-3">
+                            <label class="form-label required">Status</label>
+                            <select class="form-select" name="status" id="edit_vendor_status" required>
+                                <option value="enable">Active (Enable)</option>
+                                <option value="disable">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" name="description" id="edit_vendor_description" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn me-auto" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
     {{-- Delete Confirmation Modal --}}
@@ -905,6 +1025,20 @@
     @push('scripts')
         <script>
             document.addEventListener("DOMContentLoaded", function () {
+                window.openEditVendorModal = function (id, name, nameServer, serverId, port, status, description) {
+                    document.getElementById('editVendorForm').action = '/admin/vendors/' + id;
+                    document.getElementById('edit_vendor_name').value = name;
+                    document.getElementById('edit_name_server').value = nameServer;
+                    if (document.getElementById('edit_vendor_server')) {
+                        document.getElementById('edit_vendor_server').value = serverId;
+                    }
+                    if (document.getElementById('edit_vendor_port')) {
+                        document.getElementById('edit_vendor_port').value = port;
+                    }
+                    document.getElementById('edit_vendor_status').value = status;
+                    document.getElementById('edit_vendor_description').value = description;
+                };
+
                 // Tooltips
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
                 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -1128,6 +1262,136 @@
                         setTimeout(() => {
                             icon.className = originalClass;
                         }, 2000);
+                    });
+                }
+
+
+                // Usage Trends Chart Logic
+                const charts = {};
+                const rangeButtons = document.querySelectorAll('.range-btn');
+                let currentRange = 'daily';
+
+                function initCharts() {
+                    const featureIds = @json($features->pluck('id'));
+                    featureIds.forEach(id => {
+                        fetchUsageData(id, currentRange);
+                    });
+                }
+
+                async function fetchUsageData(licenseId, range) {
+                    try {
+                        const response = await fetch(`/admin/licenses/${licenseId}/usage-metrics?range=${range}`);
+                        const result = await response.json();
+                        renderChart(licenseId, result);
+                    } catch (error) {
+                        console.log("Error loading chart data for " + licenseId, error);
+                    }
+                }
+
+                function renderChart(licenseId, result) {
+                    const container = document.querySelector(`#chart-${licenseId}`);
+                    if (!container) return;
+                    
+                    container.innerHTML = '';
+
+                    const options = {
+                        series: [{
+                            name: 'Peak Usage',
+                            data: result.data
+                        }],
+                        chart: {
+                            type: 'area',
+                            height: 200,
+                            sparkline: { enabled: false },
+                            toolbar: { show: false },
+                            animations: { enabled: true },
+                            fontFamily: 'inherit',
+                            foreColor: '#6e7582'
+                        },
+                        dataLabels: { enabled: false },
+                        stroke: { curve: 'smooth', width: 2 },
+                        grid: {
+                            strokeDashArray: 4,
+                            padding: { left: 0, right: 0, bottom: 0 }
+                        },
+                        fill: {
+                            type: 'gradient',
+                            gradient: {
+                                shadeIntensity: 1,
+                                opacityFrom: 0.35,
+                                opacityTo: 0.05,
+                                stops: [20, 100, 100, 100]
+                            }
+                        },
+                        xaxis: {
+                            type: 'datetime',
+                            labels: {
+                                datetimeUTC: false,
+                                style: { fontSize: '10px' }
+                            },
+                            axisBorder: { show: false },
+                            axisTicks: { show: false }
+                        },
+                        yaxis: {
+                            min: 0,
+                            max: Math.max(result.total_seats, ...result.data.map(d => d.y)) + 1,
+                            tickAmount: 4,
+                            labels: {
+                                style: { fontSize: '10px' },
+                                formatter: (val) => Math.floor(val)
+                            }
+                        },
+                        annotations: {
+                            yaxis: [{
+                                y: result.total_seats,
+                                borderColor: '#d63939',
+                                strokeDashArray: 4,
+                                borderWeight: 2,
+                                label: {
+                                    borderColor: '#d63939',
+                                    offsetY: 0,
+                                    style: { 
+                                        color: '#fff', 
+                                        background: '#d63939', 
+                                        fontSize: '10px',
+                                        fontWeight: 600,
+                                        padding: { left: 5, right: 5, top: 2, bottom: 2 }
+                                    },
+                                    text: 'Limit: ' + result.total_seats
+                                }
+                            }]
+                        },
+                        colors: ['#206bc4'],
+                        tooltip: { 
+                            x: { format: 'dd MMM yyyy HH:mm' },
+                            theme: 'dark'
+                        }
+                    };
+
+                    if (charts[licenseId]) {
+                        charts[licenseId].destroy();
+                    }
+                    
+                    const chart = new ApexCharts(container, options);
+                    chart.render();
+                    charts[licenseId] = chart;
+                }
+
+                rangeButtons.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        rangeButtons.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentRange = this.getAttribute('data-range');
+                        initCharts();
+                    });
+                });
+
+                // Initialize charts when tab is shown
+                const trendsTabAnchor = document.querySelector('a[href="#tabs-trends"]');
+                if (trendsTabAnchor) {
+                    trendsTabAnchor.addEventListener('shown.bs.tab', function () {
+                        initCharts();
+                        window.dispatchEvent(new Event('resize'));
                     });
                 }
 

@@ -175,6 +175,34 @@ class LicenseService
         return $license->fresh();
     }
 
+    public function getUsageMetrics(int $licenseId, string $range = 'daily'): array
+    {
+        $license = License::findOrFail($licenseId);
+        $query = \App\Models\LicenseUsageMetric::where('license_id', $licenseId);
+
+        // Determine aggregate column based on range (assuming PostgreSQL based on 'ilike' usage elsewhere)
+        $trunc = match ($range) {
+            'hourly' => "date_trunc('hour', recorded_at)",
+            'weekly' => "date_trunc('week', recorded_at)",
+            'monthly' => "date_trunc('month', recorded_at)",
+            default => "date_trunc('day', recorded_at)", // daily
+        };
+
+        $metrics = $query->selectRaw("{$trunc} as time_bucket, MAX(seats_used) as max_used")
+            ->groupBy('time_bucket')
+            ->orderBy('time_bucket', 'asc')
+            ->get();
+
+        return [
+            'license_name' => $license->license_name,
+            'total_seats' => $license->total_seats,
+            'data' => $metrics->map(fn($m) => [
+                'x' => $m->time_bucket,
+                'y' => (int)$m->max_used,
+            ]),
+        ];
+    }
+
     public function expiringWithinDays(int $days = 30): \Illuminate\Database\Eloquent\Collection
     {
         return License::expiringSoon($days)->active()->with('server')->get();

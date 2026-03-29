@@ -12,8 +12,9 @@ class VendorController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255|unique:vendors,name',
+            'name_server' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'license_server_id' => 'required|exists:license_servers,id',
+            'license_server_id' => 'nullable|exists:license_servers,id',
             'port' => 'nullable|string|max:50',
             'status' => 'required|in:enable,disable',
         ]);
@@ -27,8 +28,9 @@ class VendorController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255|unique:vendors,name,' . $vendor->id,
+            'name_server' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'license_server_id' => 'required|exists:license_servers,id',
+            'license_server_id' => 'nullable|exists:license_servers,id',
             'port' => 'nullable|string|max:50',
             'status' => 'required|in:enable,disable',
         ]);

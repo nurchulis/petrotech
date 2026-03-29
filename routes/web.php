@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('licenses', LicenseController::class);
 
             Route::post('/licenses/{license}/toggle', [LicenseController::class, 'toggle'])->name('licenses.toggle');
+            Route::get('/licenses/{license}/usage-metrics', [LicenseController::class, 'getUsageMetrics'])->name('licenses.usage_metrics');
 
             // VM Monitoring
             Route::prefix('vm-monitoring')->name('vm-monitoring.')->group(function () {

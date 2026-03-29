@@ -112,19 +112,25 @@
                             <input type="text" class="form-control" name="name" required placeholder="e.g. lgcx">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label required">License Server</label>
-                            <select class="form-select" name="license_server_id" required>
-                                <option value="">— Select Server —</option>
-                                @foreach(\App\Models\LicenseServer::all() as $server)
-                                    <option value="{{ $server->id }}">{{ $server->server_name }} ({{ $server->ip_address }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
+                            <input type="text" class="form-control" name="name_server" placeholder="e.g. 2094@LLJOSAJ1">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label required">Port</label>
-                            <input type="text" class="form-control" name="port" required placeholder="e.g. 27000">
-                        </div>
+                        @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
+                            <div class="mb-3">
+                                <label class="form-label required">License Server</label>
+                                <select class="form-select" name="license_server_id" required>
+                                    <option value="">— Select Server —</option>
+                                    @foreach(\App\Models\LicenseServer::all() as $server)
+                                        <option value="{{ $server->id }}">{{ $server->server_name }} ({{ $server->ip_address }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Port</label>
+                                <input type="text" class="form-control" name="port" required placeholder="e.g. 27000">
+                            </div>
+                        @endif
                         <div class="mb-3">
                             <label class="form-label required">Status</label>
                             <select class="form-select" name="status" required>
@@ -211,9 +217,10 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <code
-                                        id="server-{{ $v->id }}">{{ $v->port ?? '27000' }}&#64;{{ optional($v->server)->server_name }}</code>
+                                        id="server-{{ $v->id }}">{{ $v->name_server ?? ($v->port ? $v->port . '@' . optional($v->server)->server_name : 'N/A') }}</code>
                                     <button class="btn btn-icon btn-ghost-primary btn-sm ms-2 border-0"
-                                        onclick="event.stopPropagation(); copyToClipboard('server-{{ $v->id }}', this)" title="Copy Server Info">
+                                        onclick="event.stopPropagation(); copyToClipboard('server-{{ $v->id }}', this)"
+                                        title="Copy Server Info">
                                         <i class="fas fa-copy" style="font-size: 0.7rem;"></i>
                                     </button>
                                 </div>
@@ -242,7 +249,7 @@
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
                                     data-bs-target="#editVendorModal"
-                                    onclick="event.stopPropagation(); openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ $v->license_server_id }}', '{{ $v->port }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
+                                    onclick="event.stopPropagation(); openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ addslashes($v->name_server ?? '') }}', '{{ $v->license_server_id }}', '{{ $v->port }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
                                     Edit
                                 </button>
                                 <a href="{{ route('admin.licenses.vendor', $v->id) }}"
@@ -300,19 +307,26 @@
                             <input type="text" class="form-control" name="name" id="edit_vendor_name" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label required">License Server</label>
-                            <select class="form-select" name="license_server_id" id="edit_vendor_server" required>
-                                <option value="">— Select Server —</option>
-                                @foreach(\App\Models\LicenseServer::all() as $server)
-                                    <option value="{{ $server->id }}">{{ $server->server_name }} ({{ $server->ip_address }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
+                            <input type="text" class="form-control" name="name_server" id="edit_name_server"
+                                placeholder="e.g. 2094@LLJOSAJ1">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label required">Port</label>
-                            <input type="text" class="form-control" name="port" id="edit_vendor_port" required>
-                        </div>
+                        @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
+                            <div class="mb-3">
+                                <label class="form-label required">License Server</label>
+                                <select class="form-select" name="license_server_id" id="edit_vendor_server" required>
+                                    <option value="">— Select Server —</option>
+                                    @foreach(\App\Models\LicenseServer::all() as $server)
+                                        <option value="{{ $server->id }}">{{ $server->server_name }} ({{ $server->ip_address }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Port</label>
+                                <input type="text" class="form-control" name="port" id="edit_vendor_port" required>
+                            </div>
+                        @endif
                         <div class="mb-3">
                             <label class="form-label required">Status</label>
                             <select class="form-select" name="status" id="edit_vendor_status" required>
@@ -336,11 +350,16 @@
     </div>
 
     <script>
-        function openEditVendorModal(id, name, serverId, port, status, description) {
+        function openEditVendorModal(id, name, nameServer, serverId, port, status, description) {
             document.getElementById('editVendorForm').action = '/admin/vendors/' + id;
             document.getElementById('edit_vendor_name').value = name;
-            document.getElementById('edit_vendor_server').value = serverId;
-            document.getElementById('edit_vendor_port').value = port;
+            document.getElementById('edit_name_server').value = nameServer;
+            if (document.getElementById('edit_vendor_server')) {
+                document.getElementById('edit_vendor_server').value = serverId;
+            }
+            if (document.getElementById('edit_vendor_port')) {
+                document.getElementById('edit_vendor_port').value = port;
+            }
             document.getElementById('edit_vendor_status').value = status;
             document.getElementById('edit_vendor_description').value = description;
         }

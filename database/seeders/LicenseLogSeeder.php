@@ -18,7 +18,6 @@ class LicenseLogSeeder extends Seeder
             'checkin',
             'failed_checkout',
             'failed_checkin',
-            'denied'
         ];
 
         foreach ($licenses as $license) {
@@ -34,7 +33,6 @@ class LicenseLogSeeder extends Seeder
                     'checkin' => "User '{$username}' checked in feature",
                     'failed_checkout' => "User '{$username}' failed checkout: No seats available",
                     'failed_checkin' => "User '{$username}' failed checkin: Connection lost",
-                    'denied' => "User '{$username}' denied access: Unauthorized machine",
                     default => "User '{$username}' performed {$type}",
                 };
 

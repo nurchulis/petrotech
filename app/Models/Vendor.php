@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Vendor extends Model
 {
-    protected $fillable = ['name', 'description', 'license_server_id', 'port', 'status', 'last_updated'];
+    protected $fillable = ['name', 'name_server', 'description', 'license_server_id', 'port', 'status', 'last_updated'];
 
     protected $casts = [
         'last_updated' => 'datetime',

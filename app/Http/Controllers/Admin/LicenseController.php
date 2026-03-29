@@ -169,6 +169,15 @@ class LicenseController extends Controller
         return back()->with('success', 'License status updated.');
     }
 
+    public function getUsageMetrics(Request $request, int $licenseId): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('viewAny', License::class);
+        $range = $request->input('range', 'daily');
+        $data = $this->service->getUsageMetrics($licenseId, $range);
+
+        return response()->json($data);
+    }
+
     public function exportLogs(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $this->authorize('viewAny', License::class);
