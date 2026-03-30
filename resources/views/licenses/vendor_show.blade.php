@@ -970,7 +970,10 @@
                             <label class="form-label required">Port</label>
                             <input type="text" class="form-control" name="port" id="edit_vendor_port" required>
                         </div>
-                        @endif
+                        <div class="mb-3 d-none">
+                            <label class="form-label">Admin Hidden Field (Disabled)</label>
+                            <input type="text" class="form-control" value="SYSTEM_LOCKED" disabled>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label required">Status</label>
                             <select class="form-select" name="status" id="edit_vendor_status" required>
@@ -978,6 +981,9 @@
                                 <option value="disable">Disabled</option>
                             </select>
                         </div>
+                        @else
+                        <input type="hidden" name="status" id="edit_vendor_status_hidden" value="enable">
+                        @endif
                         <div class="mb-3">
                             <label class="form-label">Description (Optional)</label>
                             <textarea class="form-control" name="description" id="edit_vendor_description" rows="2"></textarea>
@@ -1035,7 +1041,12 @@
                     if (document.getElementById('edit_vendor_port')) {
                         document.getElementById('edit_vendor_port').value = port;
                     }
-                    document.getElementById('edit_vendor_status').value = status;
+                    if (document.getElementById('edit_vendor_status')) {
+                        document.getElementById('edit_vendor_status').value = status;
+                    }
+                    if (document.getElementById('edit_vendor_status_hidden')) {
+                        document.getElementById('edit_vendor_status_hidden').value = status;
+                    }
                     document.getElementById('edit_vendor_description').value = description;
                 };
 

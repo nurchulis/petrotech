@@ -109,11 +109,19 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label required">Vendor Name</label>
-                            <input type="text" class="form-control" name="name" required placeholder="e.g. lgcx">
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" required
+                                placeholder="e.g. lgcx">
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
-                            <input type="text" class="form-control" name="name_server" placeholder="e.g. 2094@LLJOSAJ1">
+                            <input type="text" class="form-control @error('name_server') is-invalid @enderror"
+                                name="name_server" placeholder="e.g. 2094@LLJOSAJ1">
+                            @error('name_server')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
                             <div class="mb-3">
@@ -130,14 +138,23 @@
                                 <label class="form-label required">Port</label>
                                 <input type="text" class="form-control" name="port" required placeholder="e.g. 27000">
                             </div>
+                            <div class="mb-3 d-none">
+                                <label class="form-label">Admin Hidden Field (Disabled)</label>
+                                <input type="text" class="form-control" value="SYSTEM_LOCKED" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Status</label>
+                                <select class="form-select @error('status') is-invalid @enderror" name="status" required>
+                                    <option value="enable">Active (Enable)</option>
+                                    <option value="disable">Disabled</option>
+                                </select>
+                                @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @else
+                            <input type="hidden" name="status" value="disable">
                         @endif
-                        <div class="mb-3">
-                            <label class="form-label required">Status</label>
-                            <select class="form-select" name="status" required>
-                                <option value="enable">Active (Enable)</option>
-                                <option value="disable">Disabled</option>
-                            </select>
-                        </div>
                         <div class="mb-3">
                             <label class="form-label">Description (Optional)</label>
                             <textarea class="form-control" name="description" rows="2"></textarea>
@@ -304,12 +321,19 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label required">Vendor Name</label>
-                            <input type="text" class="form-control" name="name" id="edit_vendor_name" required>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" name="name"
+                                id="edit_vendor_name" required>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
-                            <input type="text" class="form-control" name="name_server" id="edit_name_server"
-                                placeholder="e.g. 2094@LLJOSAJ1">
+                            <input type="text" class="form-control @error('name_server') is-invalid @enderror"
+                                name="name_server" id="edit_name_server" placeholder="e.g. 2094@LLJOSAJ1">
+                            @error('name_server')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
                             <div class="mb-3">
@@ -326,14 +350,24 @@
                                 <label class="form-label required">Port</label>
                                 <input type="text" class="form-control" name="port" id="edit_vendor_port" required>
                             </div>
+                            <div class="mb-3 d-none">
+                                <label class="form-label">Admin Hidden Field (Disabled)</label>
+                                <input type="text" class="form-control" value="SYSTEM_LOCKED" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Status</label>
+                                <select class="form-select @error('status') is-invalid @enderror" name="status"
+                                    id="edit_vendor_status" required>
+                                    <option value="enable">Active (Enable)</option>
+                                    <option value="disable">Disabled</option>
+                                </select>
+                                @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @else
+                            <input type="hidden" name="status" id="edit_vendor_status_hidden" value="enable">
                         @endif
-                        <div class="mb-3">
-                            <label class="form-label required">Status</label>
-                            <select class="form-select" name="status" id="edit_vendor_status" required>
-                                <option value="enable">Active (Enable)</option>
-                                <option value="disable">Disabled</option>
-                            </select>
-                        </div>
                         <div class="mb-3">
                             <label class="form-label">Description (Optional)</label>
                             <textarea class="form-control" name="description" id="edit_vendor_description"
@@ -360,7 +394,12 @@
             if (document.getElementById('edit_vendor_port')) {
                 document.getElementById('edit_vendor_port').value = port;
             }
-            document.getElementById('edit_vendor_status').value = status;
+            if (document.getElementById('edit_vendor_status')) {
+                document.getElementById('edit_vendor_status').value = status;
+            }
+            if (document.getElementById('edit_vendor_status_hidden')) {
+                document.getElementById('edit_vendor_status_hidden').value = status;
+            }
             document.getElementById('edit_vendor_description').value = description;
         }
 
@@ -375,5 +414,15 @@
                 }, 2000);
             });
         }
+        // Auto-reopen modals on validation error
+        @if($errors->any())
+            @if(old('_method') == 'PUT')
+                var editModal = new bootstrap.Modal(document.getElementById('editVendorModal'));
+                editModal.show();
+            @else
+                            var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
+                createModal.show();
+            @endif
+        @endif
     </script>
 @endsection
