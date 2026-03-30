@@ -172,8 +172,13 @@ class LicenseController extends Controller
     public function getUsageMetrics(Request $request, int $licenseId): \Illuminate\Http\JsonResponse
     {
         $this->authorize('viewAny', License::class);
+        
         $range = $request->input('range', 'daily');
-        $data = $this->service->getUsageMetrics($licenseId, $range);
+        $date = $request->input('date');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $data = $this->service->getUsageMetrics($licenseId, $range, $date, $startDate, $endDate);
 
         return response()->json($data);
     }

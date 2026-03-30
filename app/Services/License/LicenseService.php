@@ -175,20 +175,30 @@ class LicenseService
         return $license->fresh();
     }
 
-    public function getUsageMetrics(int $licenseId, string $range = 'daily'): array
+    public function getUsageMetrics(int $licenseId, string $range = 'daily', ?string $date = null, ?string $startDate = null, ?string $endDate = null): array
     {
         $license = License::findOrFail($licenseId);
         $query = \App\Models\LicenseUsageMetric::where('license_id', $licenseId);
 
-        // Determine aggregate column based on range (assuming PostgreSQL based on 'ilike' usage elsewhere)
-        $trunc = match ($range) {
-            'hourly' => "date_trunc('hour', recorded_at)",
-            'weekly' => "date_trunc('week', recorded_at)",
-            'monthly' => "date_trunc('month', recorded_at)",
-            default => "date_trunc('day', recorded_at)", // daily
-        };
+        if ($range === 'hourly' && $date) {
+            $query->whereDate('recorded_at', $date);
+            $trunc = "date_trunc('hour', recorded_at)";
+        } else {
+            if ($startDate) {
+                $query->where('recorded_at', '>=', $startDate . ' 00:00:00');
+            }
+            if ($endDate) {
+                $query->where('recorded_at', '<=', $endDate . ' 23:59:59');
+            }
 
-        $metrics = $query->selectRaw("{$trunc} as time_bucket, MAX(seats_used) as max_used")
+            $trunc = match ($range) {
+                'weekly' => "date_trunc('week', recorded_at)",
+                'monthly' => "date_trunc('month', recorded_at)",
+                default => "date_trunc('day', recorded_at)", // daily
+            };
+        }
+
+        $metrics = $query->selectRaw("{$trunc} as time_bucket, MAX(seats_used) as max_usage, AVG(seats_used) as avg_usage")
             ->groupBy('time_bucket')
             ->orderBy('time_bucket', 'asc')
             ->get();
@@ -197,8 +207,12 @@ class LicenseService
             'license_name' => $license->license_name,
             'total_seats' => $license->total_seats,
             'data' => $metrics->map(fn($m) => [
-                'x' => $m->time_bucket,
-                'y' => (int)$m->max_used,
+                'time_bucket' => $m->time_bucket,
+                'max_usage' => (int)$m->max_usage,
+                'avg_usage' => round((float)$m->avg_usage, 2),
+                'utilization' => $license->total_seats > 0
+                    ? round(((int)$m->max_usage / $license->total_seats) * 100, 2)
+                    : 0
             ]),
         ];
     }

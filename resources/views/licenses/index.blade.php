@@ -116,9 +116,9 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
+                            <label class="form-label required">Name Server (e.g. 2094@LLJOSAJ1)</label>
                             <input type="text" class="form-control @error('name_server') is-invalid @enderror"
-                                name="name_server" placeholder="e.g. 2094@LLJOSAJ1">
+                                name="name_server" placeholder="e.g. 2094@LLJOSAJ1" required>
                             @error('name_server')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -328,9 +328,9 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
+                            <label class="form-label required">Name Server (e.g. 2094@LLJOSAJ1)</label>
                             <input type="text" class="form-control @error('name_server') is-invalid @enderror"
-                                name="name_server" id="edit_name_server" placeholder="e.g. 2094@LLJOSAJ1">
+                                name="name_server" id="edit_name_server" placeholder="e.g. 2094@LLJOSAJ1" required>
                             @error('name_server')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -420,7 +420,7 @@
                 var editModal = new bootstrap.Modal(document.getElementById('editVendorModal'));
                 editModal.show();
             @else
-                            var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
+                                        var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
                 createModal.show();
             @endif
         @endif

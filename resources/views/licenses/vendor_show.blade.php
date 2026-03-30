@@ -135,10 +135,10 @@
                                     onclick="openEditVendorModal({{ $vendor->id }}, '{{ addslashes($vendor->name) }}', '{{ addslashes($vendor->name_server ?? '') }}', '{{ $vendor->license_server_id }}', '{{ $vendor->port }}', '{{ $vendor->status }}', '{{ addslashes($vendor->description ?? '') }}')">
                                     <i class="fas fa-edit me-1"></i> Edit Vendor
                                 </button>
-                                <a href="{{ route('admin.licenses.create', ['vendor_id' => $vendor->id, 'server_id' => $server?->id]) }}" class="btn btn-primary btn-sm">
+                                <!-- <a href="{{ route('admin.licenses.create', ['vendor_id' => $vendor->id, 'server_id' => $server?->id]) }}" class="btn btn-primary btn-sm">
                                     + Add License
                                 </a>
-                            @endcan
+                            @endcan -->
                             <a href="{{ route('admin.licenses.index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-chevron-left me-1"></i> Back to List
                             </a>
@@ -798,16 +798,27 @@
                     <div class="tab-pane {{ $activeTab == 'trends' ? 'active show' : '' }}" id="tabs-trends"
                         role="tabpanel">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <div>
+                            <div class="row align-items-center mb-4">
+                                <div class="col">
                                     <h3 class="card-title mb-1">Historical Feature Usage</h3>
-                                    <p class="text-muted small mb-0">Monitor seat usage fluctuations and capacity limits over time.</p>
+                                    <p class="text-muted small mb-0">Monitor peak fluctuations and average occupancy over time.</p>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="hourly">Hourly</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn active" data-range="daily">Daily</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="weekly">Weekly</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="monthly">Monthly</button>
+                                <div class="col-auto d-flex gap-2 align-items-center">
+                                    {{-- Filter Controls --}}
+                                    <div id="hourly-filter" style="display: none;">
+                                        <input type="date" class="form-control form-control-sm" id="usage-date" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div id="range-filter" class="d-flex gap-2">
+                                        <input type="date" class="form-control form-control-sm" id="usage-start-date" value="{{ date('Y-m-d', strtotime('-7 days')) }}">
+                                        <span class="text-muted">–</span>
+                                        <input type="date" class="form-control form-control-sm" id="usage-end-date" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div class="btn-group ms-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="hourly">Hourly</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary range-btn active" data-range="daily">Daily</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="weekly">Weekly</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary range-btn" data-range="monthly">Monthly</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -952,8 +963,8 @@
                             <input type="text" class="form-control" name="name" id="edit_vendor_name" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Name Server (e.g. 2094@LLJOSAJ1)</label>
-                            <input type="text" class="form-control" name="name_server" id="edit_name_server" placeholder="e.g. 2094@LLJOSAJ1">
+                            <label class="form-label required">Name Server (e.g. 2094@LLJOSAJ1)</label>
+                            <input type="text" class="form-control" name="name_server" id="edit_name_server" placeholder="e.g. 2094@LLJOSAJ1" required>
                         </div>
                         @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
                         <div class="mb-3">
@@ -1289,30 +1300,38 @@
                     });
                 }
 
-                async function fetchUsageData(licenseId, range) {
-                    try {
-                        const response = await fetch(`/admin/licenses/${licenseId}/usage-metrics?range=${range}`);
-                        const result = await response.json();
-                        renderChart(licenseId, result);
-                    } catch (error) {
-                        console.log("Error loading chart data for " + licenseId, error);
-                    }
-                }
-
                 function renderChart(licenseId, result) {
                     const container = document.querySelector(`#chart-${licenseId}`);
                     if (!container) return;
                     
                     container.innerHTML = '';
 
+                    // Determine label format based on range
+                    let xFormat = 'dd MMM';
+                    let tooltipXFormat = 'dd MMM yyyy HH:mm';
+                    
+                    if (currentRange === 'hourly') {
+                        xFormat = 'HH:mm';
+                        tooltipXFormat = 'HH:mm';
+                    } else if (currentRange === 'monthly') {
+                        xFormat = 'MMM yyyy';
+                        tooltipXFormat = 'MMM yyyy';
+                    }
+
                     const options = {
-                        series: [{
-                            name: 'Peak Usage',
-                            data: result.data
-                        }],
+                        series: [
+                            {
+                                name: 'Peak Usage',
+                                data: result.data.map(d => ({ x: new Date(d.time_bucket).getTime(), y: d.max_usage }))
+                            },
+                            {
+                                name: 'Trend Usage',
+                                data: result.data.map(d => ({ x: new Date(d.time_bucket).getTime(), y: d.avg_usage }))
+                            }
+                        ],
                         chart: {
                             type: 'area',
-                            height: 200,
+                            height: 240,
                             sparkline: { enabled: false },
                             toolbar: { show: false },
                             animations: { enabled: true },
@@ -1320,32 +1339,38 @@
                             foreColor: '#6e7582'
                         },
                         dataLabels: { enabled: false },
-                        stroke: { curve: 'smooth', width: 2 },
+                        stroke: { 
+                            curve: 'smooth', 
+                            width: [3, 2],
+                            dashArray: [0, 4]
+                        },
                         grid: {
                             strokeDashArray: 4,
-                            padding: { left: 0, right: 0, bottom: 0 }
+                            padding: { left: 10, right: 10, bottom: 0 }
                         },
                         fill: {
                             type: 'gradient',
                             gradient: {
                                 shadeIntensity: 1,
-                                opacityFrom: 0.35,
-                                opacityTo: 0.05,
-                                stops: [20, 100, 100, 100]
+                                opacityFrom: 0.2,
+                                opacityTo: 0.02,
+                                stops: [0, 90, 100]
                             }
                         },
                         xaxis: {
                             type: 'datetime',
                             labels: {
                                 datetimeUTC: false,
+                                format: xFormat,
                                 style: { fontSize: '10px' }
                             },
                             axisBorder: { show: false },
-                            axisTicks: { show: false }
+                            axisTicks: { show: false },
+                            tooltip: { enabled: false }
                         },
                         yaxis: {
                             min: 0,
-                            max: Math.max(result.total_seats, ...result.data.map(d => d.y)) + 1,
+                            max: Math.max(result.total_seats, ...result.data.map(d => d.max_usage)) + 2,
                             tickAmount: 4,
                             labels: {
                                 style: { fontSize: '10px' },
@@ -1356,7 +1381,7 @@
                             yaxis: [{
                                 y: result.total_seats,
                                 borderColor: '#d63939',
-                                strokeDashArray: 4,
+                                strokeDashArray: 0,
                                 borderWeight: 2,
                                 label: {
                                     borderColor: '#d63939',
@@ -1365,17 +1390,32 @@
                                         color: '#fff', 
                                         background: '#d63939', 
                                         fontSize: '10px',
-                                        fontWeight: 600,
-                                        padding: { left: 5, right: 5, top: 2, bottom: 2 }
+                                        fontWeight: 600
                                     },
                                     text: 'Limit: ' + result.total_seats
                                 }
                             }]
                         },
-                        colors: ['#206bc4'],
+                        colors: ['#206bc4', '#4299e1'],
                         tooltip: { 
-                            x: { format: 'dd MMM yyyy HH:mm' },
-                            theme: 'dark'
+                            x: { format: tooltipXFormat },
+                            theme: 'dark',
+                            y: {
+                                formatter: function(val, { series, seriesIndex, dataPointIndex, w }) {
+                                    const item = result.data[dataPointIndex];
+                                    if (seriesIndex === 0 && item) { // Peak
+                                        return `${val} / ${result.total_seats} (${item.utilization}%)`;
+                                    }
+                                    return val;
+                                }
+                            }
+                        },
+                        legend: {
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '11px',
+                            markers: { radius: 12 }
                         }
                     };
 
@@ -1393,9 +1433,53 @@
                         rangeButtons.forEach(b => b.classList.remove('active'));
                         this.classList.add('active');
                         currentRange = this.getAttribute('data-range');
+                        
+                        const hourlyFilter = document.getElementById('hourly-filter');
+                        const rangeFilter = document.getElementById('range-filter');
+
+                        // Toggle filter visibility using Bootstrap classes for stability
+                        if (currentRange === 'hourly') {
+                            hourlyFilter.classList.remove('d-none');
+                            rangeFilter.classList.add('d-none');
+                            // Ensure display: none from inline style is removed if present
+                            hourlyFilter.style.display = 'block'; 
+                            rangeFilter.style.display = 'none';
+                        } else {
+                            hourlyFilter.classList.add('d-none');
+                            rangeFilter.classList.remove('d-none');
+                            hourlyFilter.style.display = 'none';
+                            rangeFilter.style.display = 'flex';
+                        }
+                        
                         initCharts();
                     });
                 });
+
+                // Handle filter changes
+                ['usage-date', 'usage-start-date', 'usage-end-date'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('change', initCharts);
+                });
+
+                async function fetchUsageData(licenseId, range) {
+                    try {
+                        let url = `/admin/licenses/${licenseId}/usage-metrics?range=${range}`;
+                        if (range === 'hourly') {
+                            const dateVal = document.getElementById('usage-date').value;
+                            url += `&date=${dateVal}`;
+                        } else {
+                            const startVal = document.getElementById('usage-start-date').value;
+                            const endVal = document.getElementById('usage-end-date').value;
+                            url += `&start_date=${startVal}&end_date=${endVal}`;
+                        }
+
+                        const response = await fetch(url);
+                        const result = await response.json();
+                        renderChart(licenseId, result);
+                    } catch (error) {
+                        console.log("Error loading chart data for " + licenseId, error);
+                    }
+                }
 
                 // Initialize charts when tab is shown
                 const trendsTabAnchor = document.querySelector('a[href="#tabs-trends"]');
