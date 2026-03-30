@@ -77,7 +77,13 @@ class LicenseService
             return (object) [
                 'name' => (string) $username,
                 'username' => (string) $username,
-                'accessibleLicenses' => $records->map(fn($r) => $r->license),
+                'accessibleLicenses' => $records->map(fn($r) => (object) [
+                    'id' => $r->license->id,
+                    'license_name' => $r->license->license_name,
+                    'status' => $r->status,
+                ]),
+                // Overall status for convenience in UI (most recently updated record)
+                'status' => $records->first()->status ?? 'enable',
             ];
         })->values();
 
@@ -104,7 +110,7 @@ class LicenseService
         ];
     }
 
-    public function syncAccess(string $username, array $licenseIds, array $scopeLicenseIds, User $grantor): void
+    public function syncAccess(string $username, array $licenseIds, array $scopeLicenseIds, User $grantor, string $status = 'enable'): void
     {
         // 1. Remove access for any licenses in the scope that are NOT in the new list
         LicenseUserAccess::where('username', $username)
@@ -116,7 +122,10 @@ class LicenseService
         foreach ($licenseIds as $id) {
             LicenseUserAccess::updateOrCreate(
                 ['username' => $username, 'license_id' => $id],
-                ['granted_by' => $grantor->id]
+                [
+                    'granted_by' => $grantor->id,
+                    'status' => $status
+                ]
             );
         }
     }

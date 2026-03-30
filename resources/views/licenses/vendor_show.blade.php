@@ -679,12 +679,13 @@
                                 <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
 
                                 <div class="row g-3 align-items-end">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label small fw-bold">Username</label>
                                         <input type="text" name="username" class="form-control"
                                             placeholder="Enter username (e.g. nurchulis)" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
+                                    <div class="col-md-5">
                                         <label class="form-label small fw-bold">Allow Features</label>
                                         <div class="dropdown">
                                             <button class="btn btn-outline-secondary dropdown-toggle w-full text-start"
@@ -699,12 +700,25 @@
                                                         class="dropdown-item d-flex align-items-center py-1 px-2 cursor-pointer">
                                                         <input class="form-check-input m-0 me-2 feature-checkbox"
                                                             type="checkbox" name="license_ids[]" value="{{ $f->id }}"
-                                                            data-name="{{ $f->license_name }}">
+                                                            data-name="{{ $f->license_name }}" checked>
                                                         <span class="small">{{ $f->license_name }}</span>
                                                     </label>
                                                 @endforeach
                                             </div>
                                         </div>
+                                    </div>
+                                    @else
+                                        {{-- For other roles, auto-select all features but keep hidden --}}
+                                        @foreach($features as $f)
+                                            <input type="hidden" name="license_ids[]" value="{{ $f->id }}">
+                                        @endforeach
+                                    @endif
+                                    <div class="{{ (auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin')) ? 'col-md-2' : 'col-md-7' }}">
+                                        <label class="form-label small fw-bold">Status</label>
+                                        <select name="status" class="form-select" required>
+                                            <option value="enable">Enable</option>
+                                            <option value="disable">Disable</option>
+                                        </select>
                                     </div>
                                     <div class="col-md-2 text-end">
                                         <button type="submit" class="btn btn-primary w-full">Grant</button>
@@ -718,7 +732,10 @@
                                 <thead>
                                     <tr>
                                         <th>Authorized Username</th>
+                                        @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
                                         <th>Allowed Features</th>
+                                        @endif
+                                        <th class="text-end">Status Access</th>
                                         <th class="text-end">Action</th>
                                     </tr>
                                 </thead>
@@ -732,6 +749,7 @@
                                                     <span class="fw-bold">{{ $user->username }}</span>
                                                 </div>
                                             </td>
+                                            @if(auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin'))
                                             <td>
                                                 @foreach($user->accessibleLicenses as $al)
                                                     <div class="badge bg-blue-lt text-blue me-1 mb-1">
@@ -749,10 +767,16 @@
                                                     </div>
                                                 @endforeach
                                             </td>
+                                            @endif
+                                            <td class="text-end">
+                                                <span class="badge {{ $user->status === 'enable' ? 'bg-success' : 'bg-secondary' }} text-white badge-pill">
+                                                    {{ ucfirst($user->status) }}
+                                                </span>
+                                            </td>
                                             <td class="text-end">
                                                 <div class="btn-list justify-content-end">
                                                     <button class="btn btn-icon btn-sm btn-outline-primary"
-                                                        onclick="openEditModal('{{ $user->username }}', {{ json_encode($user->accessibleLicenses->pluck('id')) }})"
+                                                        onclick="openEditModal('{{ $user->username }}', {{ json_encode($user->accessibleLicenses->pluck('id')) }}, '{{ $user->status }}')"
                                                         title="Edit Access">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -873,7 +897,16 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="username" id="editUsernameInput">
+                        
                         <div class="mb-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <select name="status" id="edit_access_status" class="form-select" required>
+                                <option value="enable">Enable</option>
+                                <option value="disable">Disable</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="editFeaturesSection" {{ (auth()->user()->hasRole('admin') && !auth()->user()->hasRole('super_admin')) ? '' : 'style=display:none;' }}>
                             <label class="form-label fw-bold">Allowed Features</label>
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary dropdown-toggle w-full text-start" type="button"
@@ -1148,9 +1181,14 @@
                 setupDropdownHandlers('.feature-checkbox', '.selected-count');
                 setupDropdownHandlers('.edit-feature-checkbox', '#editSelectedCount');
 
-                window.openEditModal = function (username, licenseIds) {
+                window.openEditModal = function (username, licenseIds, status) {
                     document.getElementById('editUsernameLabel').textContent = username;
                     document.getElementById('editUsernameInput').value = username;
+                    
+                    const statusSelect = document.getElementById('edit_access_status');
+                    if (statusSelect) {
+                        statusSelect.value = status;
+                    }
 
                     // Uncheck all first
                     const checkboxes = document.querySelectorAll('.edit-feature-checkbox');

@@ -43,6 +43,7 @@ class LicenseController extends Controller
             'license_ids.*' => 'exists:licenses,id',
             'server_id' => 'required|exists:license_servers,id',
             'vendor_id' => 'required|exists:vendors,id',
+            'status' => 'required|in:enable,disable',
         ]);
 
         // Get all candidate license IDs for this vendor to scope the sync
@@ -51,7 +52,7 @@ class LicenseController extends Controller
             ->pluck('id')
             ->toArray();
 
-        $this->service->syncAccess($data['username'], $data['license_ids'], $scopeLicenseIds, auth()->user());
+        $this->service->syncAccess($data['username'], $data['license_ids'], $scopeLicenseIds, auth()->user(), $data['status']);
 
         return back()->with('success', "Access for '{$data['username']}' updated successfully.")
             ->with('active_tab', 'access');

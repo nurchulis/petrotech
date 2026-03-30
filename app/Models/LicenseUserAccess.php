@@ -10,7 +10,11 @@ class LicenseUserAccess extends Model
     protected $table = 'license_user_access';
 
     protected $fillable = [
-        'username', 'license_id', 'granted_by', 'expires_at',
+        'username',
+        'license_id',
+        'granted_by',
+        'expires_at',
+        'status',
     ];
 
     protected $casts = [
