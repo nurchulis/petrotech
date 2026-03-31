@@ -31,6 +31,21 @@
 
 {{-- Charts --}}
 <div class="row g-3">
+    @if(empty($trendData['labels']))
+    <div class="col-12">
+        <div class="alert alert-info border-0 shadow-sm mb-0">
+            <div class="d-flex">
+                <div>
+                    <i class="fas fa-info-circle me-2"></i>
+                </div>
+                <div>
+                    <h4 class="alert-title">No Monitoring Data Available</h4>
+                    <div class="text-muted">No metrics recorded for this VM in the last 24 hours. Please check the monitoring agent status or generate test data.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @else
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0"><h4 class="card-title mb-0">CPU Usage (24h)</h4></div>
@@ -62,6 +77,7 @@
             <div class="card-body"><div id="chart-gpu"></div></div>
         </div>
     </div>
+    @endif
     @endif
 </div>
 @endsection
