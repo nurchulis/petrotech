@@ -19,6 +19,11 @@ class LicenseController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', License::class);
+        
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+        ]);
+
         $filters = $request->only(['search']);
         $vendors = $this->service->listVendors($filters);
         $expiring = $this->service->expiringWithinDays(30);
@@ -174,6 +179,13 @@ class LicenseController extends Controller
     {
         $this->authorize('viewAny', License::class);
         
+        $request->validate([
+            'range'      => 'nullable|in:daily,weekly,monthly',
+            'date'       => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date',
+        ]);
+
         $range = $request->input('range', 'daily');
         $date = $request->input('date');
         $startDate = $request->input('start_date');

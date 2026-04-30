@@ -13,19 +13,25 @@ use Illuminate\View\View;
 
 class GroupController extends Controller
 {
-    public function __construct(private VdiAccessService $accessService) {}
+    public function __construct(private VdiAccessService $accessService)
+    {
+    }
 
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Group::class);
-        
+
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+        ]);
+
         $query = Group::withCount(['users', 'vms'])->orderBy('name');
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -44,7 +50,7 @@ class GroupController extends Controller
         $this->authorize('create', Group::class);
 
         $data = $request->validate([
-            'name'        => 'required|string|max:100|unique:groups,name',
+            'name' => 'required|string|max:100|unique:groups,name',
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -63,7 +69,7 @@ class GroupController extends Controller
         $this->authorize('update', $group);
 
         $data = $request->validate([
-            'name'        => 'required|string|max:100|unique:groups,name,' . $group->id,
+            'name' => 'required|string|max:100|unique:groups,name,' . $group->id,
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -95,7 +101,7 @@ class GroupController extends Controller
     {
         $this->authorize('update', $group);
         $data = $request->validate([
-            'user_ids'   => 'required|array|min:1',
+            'user_ids' => 'required|array|min:1',
             'user_ids.*' => 'exists:users,id'
         ]);
         $this->accessService->addMembersToGroup($group, $data['user_ids']);
@@ -125,7 +131,7 @@ class GroupController extends Controller
     {
         $this->authorize('update', $group);
         $data = $request->validate([
-            'vm_ids'   => 'required|array|min:1',
+            'vm_ids' => 'required|array|min:1',
             'vm_ids.*' => 'exists:vms,id'
         ]);
         $this->accessService->addVmsToGroup($group, $data['vm_ids']);

@@ -17,6 +17,12 @@ class TicketController extends Controller
 
     public function index(Request $request): View
     {
+        $request->validate([
+            'status'   => 'nullable|in:open,in_progress,resolved,closed',
+            'priority' => 'nullable|in:low,medium,high,critical',
+            'search'   => 'nullable|string|max:100',
+        ]);
+
         $filters = $request->only(['status', 'priority', 'search']);
         $tickets = $this->service->list(auth()->user(), $filters);
         $stats   = $this->service->statistics();

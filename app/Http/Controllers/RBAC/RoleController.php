@@ -17,6 +17,11 @@ class RoleController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Role::class);
+
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+        ]);
+
         $filters = $request->only(['search']);
         $roles   = $this->service->list($filters);
         return view('rbac.roles.index', compact('roles'));

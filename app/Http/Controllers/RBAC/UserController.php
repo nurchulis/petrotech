@@ -17,6 +17,13 @@ class UserController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', User::class);
+
+        $request->validate([
+            'role'   => 'nullable|string|exists:roles,name',
+            'status' => 'nullable|in:1,0',
+            'search' => 'nullable|string|max:100',
+        ]);
+
         $filters = $request->only(['search', 'role', 'status']);
         $users   = $this->service->list($filters);
         $roles   = Role::orderBy('name')->get();

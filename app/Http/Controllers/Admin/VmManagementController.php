@@ -59,15 +59,15 @@ class VmManagementController extends Controller
             'application_name' => 'required|string|max:255',
             'status'           => 'required|in:running,stopped,paused',
             'region'           => 'nullable|string|max:100',
-            'data_center'      => 'nullable|string|max:100',
+            'data_center'      => 'nullable|regex:/^[a-zA-Z0-9\s\-_]+$/|max:100',
             'ip_address'       => 'nullable|string|max:50',
             'host_server'      => 'nullable|string|max:255',
             'has_gpu'          => 'boolean',
-            'gpu_model'        => 'nullable|string|max:255',
-            'cpu_cores'        => 'nullable|integer|min:1',
-            'ram_gb'           => 'nullable|integer|min:1',
+            'gpu_model'        => 'nullable|regex:/^[a-zA-Z0-9\s\-_]+$/|max:255',
+            'cpu_cores'        => 'nullable|integer|min:1|max:512',
+            'ram_gb'           => 'nullable|integer|min:1|max:16384',
             'assigned_user_id' => 'nullable|exists:users,id',
-            'notes'            => 'nullable|string',
+            'notes'            => 'nullable|string|max:2000',
         ]);
 
         $data['has_gpu'] = $request->boolean('has_gpu');
@@ -100,15 +100,15 @@ class VmManagementController extends Controller
             'application_name' => 'required|string|max:255',
             'status'           => 'required|in:running,stopped,paused',
             'region'           => 'nullable|string|max:100',
-            'data_center'      => 'nullable|string|max:100',
+            'data_center'      => 'nullable|regex:/^[a-zA-Z0-9\s\-_]+$/|max:100',
             'ip_address'       => 'nullable|string|max:50',
             'host_server'      => 'nullable|string|max:255',
             'has_gpu'          => 'boolean',
-            'gpu_model'        => 'nullable|string|max:255',
-            'cpu_cores'        => 'nullable|integer|min:1',
-            'ram_gb'           => 'nullable|integer|min:1',
+            'gpu_model'        => 'nullable|regex:/^[a-zA-Z0-9\s\-_]+$/|max:255',
+            'cpu_cores'        => 'nullable|integer|min:1|max:512',
+            'ram_gb'           => 'nullable|integer|min:1|max:16384',
             'assigned_user_id' => 'nullable|exists:users,id',
-            'notes'            => 'nullable|string',
+            'notes'            => 'nullable|string|max:2000',
         ]);
 
         $data['has_gpu'] = $request->boolean('has_gpu');
