@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petrotechnical Platform UC2 - Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Animated Background */
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+        }
+
+        /* Presentation Container */
+        #presentation {
+            flex: 1;
+            position: relative;
+            perspective: 1200px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Slide Content Components */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .title-slide {
+            text-align: center;
+        }
+
+        .title-slide h1 {
+            font-size: 5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .title-slide p {
+            font-size: 1.5rem;
+            color: var(--text-dim);
+        }
+
+        .slide-header {
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary);
+            padding-left: 1.5rem;
+            width: 100%;
+        }
+
+        .slide-header h2 {
+            font-size: 2.5rem;
+            color: var(--text-main);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-box h3 {
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+        }
+
+        .info-box li {
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .info-box li::before {
+            content: "•";
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            color: #818cf8;
+        }
+
+        pre {
+            background: #0f172a;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #e2e8f0;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(8px);
+        }
+
+        .control-btn:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            transition: width 0.4s ease;
+            z-index: 101;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            color: var(--text-dim);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Architecture Diagram Fix */
+        .arch-diagram {
+            font-size: 0.8rem !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            .slide {
+                padding: 1.5rem;
+            }
+            .title-slide h1 {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="progress-bar" id="progress"></div>
+    <div class="slide-number" id="num">1 / 8</div>
+
+    <div id="presentation">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="glass-card title-slide">
+                <h1>Petrotechnical Platform UC2</h1>
+                <p>Enterprise Resource & VDI Management System</p>
+                <div style="margin-top: 3rem; color: var(--text-dim); font-size: 0.9rem;">
+                    Use Arrow Keys or Buttons to Navigate
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Platform Overview -->
+        <div class="slide">
+            <div class="glass-card">
+                <div class="slide-header">
+                    <h2>Platform Overview</h2>
+                </div>
+                <div class="content-grid">
+                    <div class="info-box">
+                        <h3><i class="fas fa-rocket"></i> Core Purpose</h3>
+                        <ul>
+                            <li>Centralized management for high-performance petrotechnical workstations.</li>
+                            <li>Comprehensive infrastructure monitoring and reporting.</li>
+                            <li>Automated IT helpdesk and licensing workflows.</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3><i class="fas fa-layer-group"></i> Key Features</h3>
+                        <ul>
+                            <li>Dual-mode VDI Access (Real RDP + Legacy Sim).</li>
+                            <li>Real-time VM & Storage Telemetry.</li>
+                            <li>Enterprise License Tracking & Auditing.</li>
+                            <li>Role-based access (Spatie Permissions).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: High-Level Architecture -->
+        <div class="slide">
+            <div class="glass-card">
+                <div class="slide-header">
+                    <h2>Technical Architecture</h2>
+                </div>
+                <pre class="arch-diagram">
+Browser ──HTTP──► Nginx (prod) / artisan serve (dev)
+                               │
+                         [localhost:8080]
+                      Guacamole Web (Docker) ◄─── REST API Integrations
+                               │
+                            guacd (Docker) ──RDP──► Windows VMs
+                      │
+                      ▼
+               Laravel 12 Application (PHP 8.2+)
+                      │
+          ┌───────────┼───────────────┐
+          │           │               │
+       Eloquent    Services Layer   Policies (Gate)
+          │           │               │
+          ▼           ▼               ▼
+    PostgreSQL 18   Business Logic   Spatie Roles
+                </pre>
+                <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-dim);">
+                    Modular design with strict 1-way data flow: Controller → Service → Model
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: VDI Module -->
+        <div class="slide">
+            <div class="glass-card">
+                <div class="slide-header">
+                    <h2>VDI Module: Secure Desktop Access</h2>
+                </div>
+                <div class="content-grid">
+                    <div class="info-box">
+                        <h3><i class="fas fa-desktop"></i> Dual-Mode Connectivity</h3>
+                        <ul>
+                            <li><code>Real RDP</code>: Integrated Apache Guacamole for browser-based remote desktop access.</li>
+                            <li><code>Legacy Sim</code>: Fullscreen web-based OS simulation for training/demo environments.</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3><i class="fas fa-shield-halved"></i> Security & Integration</h3>
+                        <ul>
+                            <li>RDP credentials stored with AES-256 encryption.</li>
+                            <li>Automatic session termination & Guacamole connection cleanup.</li>
+                            <li>Connection tokens for session lifecycle management.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Infrastructure Monitoring -->
+        <div class="slide">
+            <div class="glass-card">
+                <div class="slide-header">
+                    <h2>Infrastructure Monitoring</h2>
+                </div>
+                <div class="content-grid">
+                    <div class="info-box">
+                        <h3><i class="fas fa-microchip"></i> VM Metrics</h3>
+                        <ul>
+                            <li>24-hour time-series telemetry for CPU, RAM, Disk, & Network.</li>
+                            <li>GPU Utilization tracking with specialized hardware support.</li>
+                            <li>Dynamic trend charts powered by ApexCharts.</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3><i class="fas fa-database"></i> Storage Insights</h3>
+                        <ul>
+                            <li>Capacity monitoring for NAS/SAN/Object Storage.</li>
+                            <li>30-day historical usage projection & growth analysis.</li>
+                            <li>Real-time status tracking across multiple regions.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: License Management -->
+        <div class="slide">
+            <div class="glass-card">
+                <div class="slide-header">
+                    <h2>License & Analytics</h2>
+                </div>
+                <div class="content-grid">
+                    <div class="info-box">
+                        <h3><i class="fas fa-key"></i> Software Compliance</h3>
+                        <ul>
+                            <li>Centralized FlexLM & custom license server tracking.</li>
+                            <li>Automated expiry warnings and seat usage auditing.</li>
+                            <li>Spatie Activity Logs for every change (Audit Trail).</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3><i class="fas fa-chart-line"></i> Platform Analytics</h3>
+                        <ul>
+                            <li>Aggregated dashboards for system-wide health.</li>
+                            <li>Time-period filtering (Week / Month / Year).</li>
+                            <li>Radial & Bar charts for resource allocation overview.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Integrated Support -->
+        <div class="slide">
+            <div class="glass-card">
+                <div class="slide-header">
+                    <h2>Support & Ticketing</h2>
+                </div>
+                <div class="content-grid">
+                    <div class="info-box">
+                        <h3><i class="fas fa-ticket-alt"></i> Helpdesk Workflow</h3>
+                        <ul>
+                            <li>Seamless user reporting for VDI or License issues.</li>
+                            <li>Internal notes & thread management for IT admins.</li>
+                            <li>Automated ticket numbering based on date patterns.</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3><i class="fas fa-user-shield"></i> RBAC Policies</h3>
+                        <ul>
+                            <li>Hierarchical roles: <code>Super Admin</code>, <code>Admin</code>, <code>User</code>.</li>
+                            <li>Granular permission policies for every model interaction.</li>
+                            <li>Privacy controls via internal/external comment flags.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Development Excellence -->
+        <div class="slide">
+            <div class="glass-card">
+                <div class="slide-header">
+                    <h2>Tech Stack & Workflow</h2>
+                </div>
+                <div class="content-grid">
+                    <div class="info-box">
+                        <h3><i class="fas fa-code"></i> Modern Stack</h3>
+                        <ul>
+                            <li>Laravel 12 (Modern PHP 8.2+)</li>
+                            <li>PostgreSQL 18 (Performance)</li>
+                            <li>Docker (Isolation)</li>
+                            <li>ApexCharts (Visuals)</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3><i class="fas fa-vial"></i> Workflow Protocol</h3>
+                        <ul>
+                            <li>Strict Plan-Implement-Verify-Document cycle.</li>
+                            <li>No business logic in Models (Service Layer Pattern).</li>
+                            <li>Full route & view caching for production performance.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+        <button class="control-btn" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progress = document.getElementById('progress');
+        const num = document.getElementById('num');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            
+            const percent = ((currentSlide + 1) / slides.length) * 100;
+            progress.style.width = percent + '%';
+            num.innerText = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Initialize
+        updateSlide();
+    </script>
+</body>
+</html>

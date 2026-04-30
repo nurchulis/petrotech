@@ -10,7 +10,7 @@ class LicenseLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'license_id', 'event_type', 'event_detail', 'user_count', 'recorded_at',
+        'license_id', 'event_type', 'event_detail', 'user_count', 'recorded_at', 'ip_address',
     ];
 
     protected $casts = [
