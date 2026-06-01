@@ -34,12 +34,14 @@ class ReportService
         $byStatus = Ticket::select('status', DB::raw('count(*) as total'))
             ->where('created_at', '>=', $from)
             ->groupBy('status')
-            ->pluck('total', 'status');
+            ->pluck('total', 'status')
+            ->toArray();
 
         $byPriority = Ticket::select('priority', DB::raw('count(*) as total'))
             ->where('created_at', '>=', $from)
             ->groupBy('priority')
-            ->pluck('total', 'priority');
+            ->pluck('total', 'priority')
+            ->toArray();
 
         return [
             'by_status'   => $byStatus,
