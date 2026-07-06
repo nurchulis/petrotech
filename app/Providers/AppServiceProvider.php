@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Policies\RolePolicy;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,5 +25,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register policy for Spatie Role model (outside App\Models auto-discovery)
         Gate::policy(Role::class, RolePolicy::class);
+
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
