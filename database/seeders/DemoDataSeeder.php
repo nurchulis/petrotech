@@ -53,34 +53,34 @@ class DemoDataSeeder extends Seeder
 
         // ─── License Servers ──────────────────────────────────────────────
         $serverJKT = LicenseServer::create([
-            'server_name' => 'LIC-SVR-JKT-01',
-            'hostname' => 'licsrv-jkt.application.local',
-            'ip_address' => '10.10.1.100',
-            'port' => 27000,
-            'os_type' => 'Windows Server 2019',
-            'location' => 'Jakarta',
-            'status' => 'active',
+            'server_name' => 'FLEXLM-JKT-01',
+            'hostname'    => 'flexlm01.upstream.petrotech.co.id',
+            'ip_address'  => '10.10.1.100',
+            'port'        => 27000,
+            'os_type'     => 'Windows Server 2019',
+            'location'    => 'Jakarta',
+            'status'      => 'active',
         ]);
 
         $serverBPN = LicenseServer::create([
-            'server_name' => 'LIC-SVR-BPN-01',
-            'hostname' => 'licsrv-bpn.application.local',
-            'ip_address' => '10.20.1.100',
-            'port' => 27001,
-            'os_type' => 'Red Hat Enterprise Linux 8',
-            'location' => 'Balikpapan',
-            'status' => 'active',
+            'server_name' => 'FLEXLM-BPN-01',
+            'hostname'    => 'flexlm01.upstream.petrotech-kaltim.co.id',
+            'ip_address'  => '10.20.1.100',
+            'port'        => 27001,
+            'os_type'     => 'Red Hat Enterprise Linux 8',
+            'location'    => 'Balikpapan',
+            'status'      => 'active',
         ]);
 
         // ─── Vendors ───────────────────────────────────────────────────────
-        $vendorLgcx = Vendor::create(['name' => 'lgcx', 'description' => 'LGCX Software', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subMinutes(5)]);
-        $vendorDaemon = Vendor::create(['name' => 'DAEMON', 'description' => 'Daemon Software', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subHours(1)]);
+        $vendorLgcx = Vendor::create(['name' => 'schlumb', 'description' => 'Schlumberger FlexLM Vendor', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subMinutes(5)]);
+        $vendorDaemon = Vendor::create(['name' => 'landmark', 'description' => 'Halliburton Landmark FlexLM Vendor', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subHours(1)]);
 
         // ─── Licenses (Features) ──────────────────────────────────────────
         $licenses = [
             [
                 'license_name' => 'DATA_ANALYZER',
-                'vendor' => 'lgcx',
+                'vendor' => 'schlumb',
                 'version' => '5000',
                 'application_name' => 'Petrel RE',
                 'status' => 'enable',
@@ -90,7 +90,7 @@ class DemoDataSeeder extends Seeder
             ],
             [
                 'license_name' => '3D',
-                'vendor' => 'lgcx',
+                'vendor' => 'schlumb',
                 'version' => '5020.0',
                 'application_name' => 'Petrel RE',
                 'status' => 'enable',
@@ -100,7 +100,7 @@ class DemoDataSeeder extends Seeder
             ],
             [
                 'license_name' => 'GEO_MODELER',
-                'vendor' => 'DAEMON',
+                'vendor' => 'landmark',
                 'version' => '2023.1',
                 'application_name' => 'Techlog',
                 'status' => 'enable',
@@ -110,7 +110,7 @@ class DemoDataSeeder extends Seeder
             ],
             [
                 'license_name' => 'SEISMIC_ATTRIBUTES',
-                'vendor' => 'DAEMON',
+                'vendor' => 'landmark',
                 'version' => '2023.1',
                 'application_name' => 'SeisEarth',
                 'status' => 'enable',
@@ -120,7 +120,7 @@ class DemoDataSeeder extends Seeder
             ],
             [
                 'license_name' => 'RESERVOIR_SIM',
-                'vendor' => 'lgcx',
+                'vendor' => 'schlumb',
                 'version' => '2022.2',
                 'application_name' => 'Eclipse',
                 'status' => 'enable',
@@ -132,11 +132,11 @@ class DemoDataSeeder extends Seeder
 
         foreach ($licenses as $licData) {
             $vendorId = match ($licData['vendor']) {
-                'lgcx' => $vendorLgcx->id,
-                'DAEMON' => $vendorDaemon->id,
+                'schlumb' => $vendorLgcx->id,
+                'landmark' => $vendorDaemon->id,
                 default => null,
             };
-            $currentServer = ($licData['vendor'] === 'lgcx') ? $serverJKT : $serverBPN;
+            $currentServer = ($licData['vendor'] === 'schlumb') ? $serverJKT : $serverBPN;
             $licData['used_seats'] = rand(0, $licData['total_seats'] + 2);
             $vendorName = $licData['vendor'];
             unset($licData['vendor']);
@@ -148,71 +148,119 @@ class DemoDataSeeder extends Seeder
                 ])
             );
 
-            // Add fresh usage logs with IPs (mixed checkout and checkin events)
-            $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
-            $ips = ($vendorName === 'lgcx') ? ['10.10.1.', '10.30.1.'] : ['10.20.1.'];
-            for ($j = 0; $j < rand(3, 8); $j++) {
-                $username = $usernames[array_rand($usernames)];
-                $baseIp = $ips[array_rand($ips)];
-                $eventType = rand(0, 1) === 0 ? 'checkout' : 'checkin';
-                $eventAction = $eventType === 'checkout' ? 'checked out' : 'checked in';
+            // ── FlexLM-style usage logs ───────────────────────────────────
+            $flexUsers = [
+                'ahmad.ramadhan', 'budi.santoso', 'siti.rahayu',
+                'dewi.kusuma',    'eko.prasetyo',  'fajar.hidayat',
+                'gita.lestari',   'hendra.wijaya', 'indra.nugraha',
+                'joko.wibowo',    'kurnia.sari',   'nurchulis.amin',
+            ];
+            $flexHosts = [
+                'GEO-WS01',   'GEO-WS02',    'PETREL-WS01', 'PETREL-WS02',
+                'RESV-PC01',  'RESV-PC02',   'SEIS-WS01',   'SEIS-WS02',
+                'WELL-PC01',  'DRLG-PC01',   'PROD-PC01',   'ENG-WS03',
+            ];
+            $flexIps = ($vendorName === 'schlumb') ? ['10.10.1.', '10.30.1.'] : ['10.20.1.'];
+            // Weight: 60% OUT, 20% IN, 10% DENIED, 5% LOST, 5% EXPIRED
+            $eventWeights = [
+                'checkout', 'checkout', 'checkout', 'checkout', 'checkout', 'checkout',
+                'checkin',  'checkin',
+                'denied',
+                'lost',
+                'expired',
+            ];
+            $totalSeats = $licData['total_seats'];
+            $currentInUse = 0;
+            for ($j = 0; $j < rand(5, 12); $j++) {
+                $logUser = $flexUsers[array_rand($flexUsers)];
+                $host    = $flexHosts[array_rand($flexHosts)];
+                $baseIp  = $flexIps[array_rand($flexIps)];
+                $evType  = $eventWeights[array_rand($eventWeights)];
+                $feature = $license->license_name;
+
+                // Build realistic FlexLM event_detail string
+                switch ($evType) {
+                    case 'checkout':
+                        $currentInUse = min($currentInUse + 1, $totalSeats);
+                        $detail = "({$vendorName}) OUT: \"{$feature}\" {$logUser}@{$host}";
+                        break;
+                    case 'checkin':
+                        $currentInUse = max($currentInUse - 1, 0);
+                        $detail = "({$vendorName}) IN: \"{$feature}\" {$logUser}@{$host}";
+                        break;
+                    case 'denied':
+                        $detail = "({$vendorName}) DENIED: \"{$feature}\" {$logUser}@{$host} (Licensed number of users already reached. MAX={$totalSeats})";
+                        $evType = 'denied';
+                        break;
+                    case 'lost':
+                        $currentInUse = max($currentInUse - 1, 0);
+                        $detail = "({$vendorName}) LOST: \"{$feature}\" {$logUser}@{$host} (connection lost, heartbeat timeout)";
+                        break;
+                    case 'expired':
+                        $detail = "({$vendorName}) EXPIRED: Feature \"{$feature}\" {$logUser}@{$host} (license file expired)";
+                        $evType = 'expired';
+                        break;
+                    default:
+                        $detail = "({$vendorName}) OUT: \"{$feature}\" {$logUser}@{$host}";
+                }
+
                 LicenseLog::create([
-                    'license_id' => $license->id,
-                    'event_type' => $eventType,
-                    'event_detail' => "User '{$username}' {$eventAction} feature",
-                    'user_count' => rand(1, 10),
-                    'recorded_at' => now()->subMinutes(rand(10, 500)),
-                    'ip_address' => $baseIp . rand(100, 254),
+                    'license_id'   => $license->id,
+                    'event_type'   => $evType,
+                    'event_detail' => $detail,
+                    'user_count'   => $currentInUse,
+                    'recorded_at'  => now()->subMinutes(rand(5, 600)),
+                    'ip_address'   => $baseIp . rand(100, 200),
                 ]);
             }
         }
 
         // ─── Additional Example Features (User-provided) ──────────────────
         $additionalFeatures = [
-            ['license_name' => '3D', 'vendor' => 'lgcx', 'version' => '5000.8', 'total_seats' => 1],
-            ['license_name' => '3D', 'vendor' => 'lgcx', 'version' => '5020.0', 'total_seats' => 1],
-            ['license_name' => 'COMPASS_SURV_PLAN_AC', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'DATA_ANALYZER', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 2],
-            ['license_name' => 'EDM', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 5],
-            ['license_name' => 'OPWPACKAGE', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 2],
-            ['license_name' => 'PREDICT', 'vendor' => 'lgcx', 'version' => '5000.8', 'total_seats' => 1],
-            ['license_name' => 'PREDICT', 'vendor' => 'lgcx', 'version' => '5020.0', 'total_seats' => 1],
-            ['license_name' => 'PROFILE', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 2],
-            ['license_name' => 'STRESSCHECK_CASINGSEAT', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'WELLPLAN_BHA_DYNAMICS_S_PIPE', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'WELLPLAN_CEMENTING', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'WELLPLAN_HYDRAULICS', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'WELLPLAN_TORQUE_DRAG', 'vendor' => 'lgcx', 'version' => '5000', 'total_seats' => 1],
+            ['license_name' => '3D',                              'vendor' => 'schlumb',  'version' => '5000.8', 'total_seats' => 1],
+            ['license_name' => '3D',                              'vendor' => 'schlumb',  'version' => '5020.0', 'total_seats' => 1],
+            ['license_name' => 'COMPASS_SURV_PLAN_AC',            'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'DATA_ANALYZER',                   'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 2],
+            ['license_name' => 'EDM',                             'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 5],
+            ['license_name' => 'OPWPACKAGE',                      'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 2],
+            ['license_name' => 'PREDICT',                         'vendor' => 'schlumb',  'version' => '5000.8', 'total_seats' => 1],
+            ['license_name' => 'PREDICT',                         'vendor' => 'schlumb',  'version' => '5020.0', 'total_seats' => 1],
+            ['license_name' => 'PROFILE',                         'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 2],
+            ['license_name' => 'STRESSCHECK_CASINGSEAT',          'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'WELLPLAN_BHA_DYNAMICS_S_PIPE',    'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'WELLPLAN_CEMENTING',              'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'WELLPLAN_HYDRAULICS',             'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'WELLPLAN_TORQUE_DRAG',            'vendor' => 'schlumb',  'version' => '5000',   'total_seats' => 1],
 
-            ['license_name' => 'CEMENT', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'COMPASS_SURV_PLAN_AC', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'DATA_ANALYZER', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 2],
-            ['license_name' => 'EDM', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 3],
-            ['license_name' => 'HYDRAULICS', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'OPWCOMBINED', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 2],
-            ['license_name' => 'PROFILE', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 2],
-            ['license_name' => 'SPIPE_BHA_CSPEED', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'STRESSCHECK_CASINGSEAT', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
-            ['license_name' => 'TORQUEDRAG', 'vendor' => 'licsrv', 'version' => '5000', 'total_seats' => 1],
+            ['license_name' => 'CEMENT',                          'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'COMPASS_SURV_PLAN_AC',            'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'DATA_ANALYZER',                   'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 2],
+            ['license_name' => 'EDM',                             'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 3],
+            ['license_name' => 'HYDRAULICS',                      'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'OPWCOMBINED',                     'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 2],
+            ['license_name' => 'PROFILE',                         'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 2],
+            ['license_name' => 'SPIPE_BHA_CSPEED',                'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'STRESSCHECK_CASINGSEAT',          'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 1],
+            ['license_name' => 'TORQUEDRAG',                      'vendor' => 'licsrv',   'version' => '5000',   'total_seats' => 1],
         ];
 
         $serverSBY = LicenseServer::create([
-            'server_name' => 'LIC-SVR-SBY-01',
-            'hostname' => 'licsrv-sby.application.local',
-            'ip_address' => '10.30.1.100',
-            'port' => 27002,
-            'os_type' => 'Windows Server 2022',
-            'location' => 'Surabaya',
-            'status' => 'active',
+            'server_name' => 'FLEXLM-SBY-01',
+            'hostname'    => 'flexlm01.upstream.petrotech-jatim.co.id',
+            'ip_address'  => '10.30.1.100',
+            'port'        => 27002,
+            'os_type'     => 'Windows Server 2022',
+            'location'    => 'Surabaya',
+            'status'      => 'active',
         ]);
 
         $vendorLicsrv = Vendor::create(['name' => 'licsrv', 'description' => 'License Server Vendor', 'license_server_id' => $serverSBY->id, 'status' => 'enable', 'last_updated' => now()->subDays(1)]);
 
         foreach ($additionalFeatures as $feat) {
             $vendorId = match ($feat['vendor']) {
-                'lgcx' => $vendorLgcx->id,
-                'licsrv' => $vendorLicsrv->id,
-                default => null,
+                'schlumb' => $vendorLgcx->id,
+                'licsrv'  => $vendorLicsrv->id,
+                default   => null,
             };
             $currentServer = ($feat['vendor'] === 'licsrv') ? $serverSBY : $serverJKT;
             $vendorName = $feat['vendor'];
@@ -229,21 +277,62 @@ class DemoDataSeeder extends Seeder
                 ])
             );
 
-            // Add fresh usage logs with IPs (mixed checkout and checkin events)
-            $usernames = ['nurchulis', 'ahmad', 'budi', 'siti', 'dewi'];
-            $ips = ($vendorName === 'licsrv') ? ['10.30.1.'] : ['10.10.1.', '10.20.1.'];
-            for ($j = 0; $j < rand(3, 8); $j++) {
-                $username = $usernames[array_rand($usernames)];
-                $baseIp = $ips[array_rand($ips)];
-                $eventType = rand(0, 1) === 0 ? 'checkout' : 'checkin';
-                $eventAction = $eventType === 'checkout' ? 'checked out' : 'checked in';
+            // ── FlexLM-style usage logs ───────────────────────────────────
+            $flexUsers2 = [
+                'surya.dinata',   'rizky.maulana',  'putri.handayani',
+                'tommy.susanto',  'yuni.astuti',     'bagas.prakoso',
+                'citra.maharani', 'dimas.setiawan',  'erna.wati',
+                'ferry.gunawan',  'gina.lestari',    'haris.budiman',
+            ];
+            $flexHosts2 = [
+                'WELL-PC02',  'WELL-PC03',   'DRLG-PC02',   'DRLG-PC03',
+                'PROD-PC02',  'PROD-PC03',   'ENG-WS01',    'ENG-WS02',
+                'OPS-PC01',   'OPS-PC02',    'HSE-PC01',    'GEO-WS03',
+            ];
+            $flexIps2 = ($vendorName === 'licsrv') ? ['10.30.1.'] : ['10.10.1.', '10.20.1.'];
+            $eventWeights2 = [
+                'checkout', 'checkout', 'checkout', 'checkout', 'checkout',
+                'checkin',  'checkin',
+                'denied',
+                'lost',
+            ];
+            $totalSeats2 = $feat['total_seats'];
+            $currentInUse2 = 0;
+            for ($j = 0; $j < rand(4, 10); $j++) {
+                $logUser2 = $flexUsers2[array_rand($flexUsers2)];
+                $host2    = $flexHosts2[array_rand($flexHosts2)];
+                $baseIp2  = $flexIps2[array_rand($flexIps2)];
+                $evType2  = $eventWeights2[array_rand($eventWeights2)];
+                $feature2 = $feat['license_name'];
+
+                switch ($evType2) {
+                    case 'checkout':
+                        $currentInUse2 = min($currentInUse2 + 1, $totalSeats2);
+                        $detail2 = "({$vendorName}) OUT: \"{$feature2}\" {$logUser2}@{$host2}";
+                        break;
+                    case 'checkin':
+                        $currentInUse2 = max($currentInUse2 - 1, 0);
+                        $detail2 = "({$vendorName}) IN: \"{$feature2}\" {$logUser2}@{$host2}";
+                        break;
+                    case 'denied':
+                        $detail2 = "({$vendorName}) DENIED: \"{$feature2}\" {$logUser2}@{$host2} (Licensed number of users already reached. MAX={$totalSeats2})";
+                        $evType2 = 'denied';
+                        break;
+                    case 'lost':
+                        $currentInUse2 = max($currentInUse2 - 1, 0);
+                        $detail2 = "({$vendorName}) LOST: \"{$feature2}\" {$logUser2}@{$host2} (connection lost, heartbeat timeout)";
+                        break;
+                    default:
+                        $detail2 = "({$vendorName}) OUT: \"{$feature2}\" {$logUser2}@{$host2}";
+                }
+
                 LicenseLog::create([
-                    'license_id' => $license->id,
-                    'event_type' => $eventType,
-                    'event_detail' => "User '{$username}' {$eventAction} feature",
-                    'user_count' => rand(1, 10),
-                    'recorded_at' => now()->subMinutes(rand(10, 500)),
-                    'ip_address' => $baseIp . rand(100, 254),
+                    'license_id'   => $license->id,
+                    'event_type'   => $evType2,
+                    'event_detail' => $detail2,
+                    'user_count'   => $currentInUse2,
+                    'recorded_at'  => now()->subMinutes(rand(5, 600)),
+                    'ip_address'   => $baseIp2 . rand(100, 200),
                 ]);
             }
         }

@@ -86,7 +86,7 @@
                     <div class="col-md-3 bg-light-lt">
                         <div class="card-body text-center py-4 h-100 d-flex flex-column justify-content-center">
                             <div class="text-muted mb-1 text-uppercase fw-bold"
-                                style="font-size: 0.65rem; letter-spacing: 0.05em;">Total Assets</div>
+                                style="font-size: 0.65rem; letter-spacing: 0.05em;">Total</div>
                             <div class="h2 mb-0 fw-bold text-dark">{{ $totalVendors }}</div>
                             <div class="small text-muted">Registered Vendors</div>
                         </div>
@@ -234,7 +234,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <code
-                                        id="server-{{ $v->id }}">{{ $v->name_server ?? ($v->port ? $v->port . '@' . optional($v->server)->server_name : 'N/A') }}</code>
+                                        id="server-{{ $v->id }}">{{ $v->name_server ?? (($v->port ?? optional($v->server)->port) . '@' . optional($v->server)->hostname) ?? 'N/A' }}</code>
                                     <button class="btn btn-icon btn-ghost-primary btn-sm ms-2 border-0"
                                         onclick="event.stopPropagation(); copyToClipboard('server-{{ $v->id }}', this)"
                                         title="Copy Server Info">
@@ -420,7 +420,7 @@
                 var editModal = new bootstrap.Modal(document.getElementById('editVendorModal'));
                 editModal.show();
             @else
-                                        var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
+                                                                                        var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
                 createModal.show();
             @endif
         @endif

@@ -1,0 +1,58 @@
+{
+  "api_url": "http://127.0.0.1:8000/api/v1/licenses/sync",
+  "sync_interval_seconds": 10,
+  "vendors": [
+    {
+      "vendor_name": "schlumb",
+      "server_hostname": "flexlm01.upstream.petrotech.co.id",
+      "features": [
+        {"name": "DATA_ANALYZER", "version": "5000", "total_seats": 5},
+        {"name": "3D", "version": "5020.0", "total_seats": 10},
+        {"name": "RESERVOIR_SIM", "version": "2022.2", "total_seats": 15},
+        {"name": "COMPASS_SURV_PLAN_AC", "version": "5000", "total_seats": 1},
+        {"name": "EDM", "version": "5000", "total_seats": 5},
+        {"name": "OPWPACKAGE", "version": "5000", "total_seats": 2},
+        {"name": "PREDICT", "version": "5000.8", "total_seats": 1},
+        {"name": "PROFILE", "version": "5000", "total_seats": 2},
+        {"name": "STRESSCHECK_CASINGSEAT", "version": "5000", "total_seats": 1},
+        {"name": "WELLPLAN_BHA_DYNAMICS_S_PIPE", "version": "5000", "total_seats": 1},
+        {"name": "WELLPLAN_CEMENTING", "version": "5000", "total_seats": 1},
+        {"name": "WELLPLAN_HYDRAULICS", "version": "5000", "total_seats": 1},
+        {"name": "WELLPLAN_TORQUE_DRAG", "version": "5000", "total_seats": 1}
+      ],
+      "users": ["ahmad.ramadhan", "budi.santoso", "siti.rahayu", "dewi.kusuma", "eko.prasetyo", "fajar.hidayat", "nurchulis.amin"],
+      "hosts": ["GEO-WS01", "GEO-WS02", "PETREL-WS01", "PETREL-WS02", "RESV-PC01", "SEIS-WS01", "WELL-PC01"],
+      "ip_prefixes": ["10.10.1.", "10.30.1."]
+    },
+    {
+      "vendor_name": "landmark",
+      "server_hostname": "flexlm01.upstream.petrotech.co.id",
+      "features": [
+        {"name": "GEO_MODELER", "version": "2023.1", "total_seats": 8},
+        {"name": "SEISMIC_ATTRIBUTES", "version": "2023.1", "total_seats": 3}
+      ],
+      "users": ["gita.lestari", "hendra.wijaya", "indra.nugraha", "joko.wibowo", "kurnia.sari"],
+      "hosts": ["SEIS-WS01", "SEIS-WS02", "GEO-WS01"],
+      "ip_prefixes": ["10.10.1.", "10.30.1."]
+    },
+    {
+      "vendor_name": "licsrv",
+      "server_hostname": "flexlm01.upstream.petrotech-jatim.co.id",
+      "features": [
+        {"name": "CEMENT", "version": "5000", "total_seats": 1},
+        {"name": "COMPASS_SURV_PLAN_AC", "version": "5000", "total_seats": 1},
+        {"name": "DATA_ANALYZER", "version": "5000", "total_seats": 2},
+        {"name": "EDM", "version": "5000", "total_seats": 3},
+        {"name": "HYDRAULICS", "version": "5000", "total_seats": 1},
+        {"name": "OPWCOMBINED", "version": "5000", "total_seats": 2},
+        {"name": "PROFILE", "version": "5000", "total_seats": 2},
+        {"name": "SPIPE_BHA_CSPEED", "version": "5000", "total_seats": 1},
+        {"name": "STRESSCHECK_CASINGSEAT", "version": "5000", "total_seats": 1},
+        {"name": "TORQUEDRAG", "version": "5000", "total_seats": 1}
+      ],
+      "users": ["surya.dinata", "rizky.maulana", "putri.handayani", "tommy.susanto", "yuni.astuti", "bagas.prakoso", "citra.maharani"],
+      "hosts": ["WELL-PC02", "WELL-PC03", "DRLG-PC02", "ENG-WS01", "OPS-PC01"],
+      "ip_prefixes": ["10.30.1."]
+    }
+  ]
+}

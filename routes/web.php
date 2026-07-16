@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/licenses/access/revoke', [LicenseController::class, 'revokeAccess'])->name('licenses.access.revoke');
             Route::post('/licenses/access/revoke-all', [LicenseController::class, 'revokeAllAccess'])->name('licenses.access.revoke_all');
             Route::post('/licenses/logs/export', [LicenseController::class, 'exportLogs'])->name('licenses.logs.export');
+            Route::post('/licenses/kick', [LicenseController::class, 'kickUser'])->name('licenses.kick');
             Route::post('/vendors', [\App\Http\Controllers\Admin\VendorController::class, 'store'])->name('vendors.store');
             Route::put('/vendors/{vendor}', [\App\Http\Controllers\Admin\VendorController::class, 'update'])->name('vendors.update');
             Route::resource('licenses', LicenseController::class);

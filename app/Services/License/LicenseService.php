@@ -49,9 +49,16 @@ class LicenseService
                 ->orderBy('recorded_at', 'desc')
                 ->get()
                 ->map(function ($log) {
-                    preg_match("/'([^']+)'/", $log->event_detail, $matches);
+                    if (preg_match("/\"[^\"]+\"\s+([^\s]+)/", $log->event_detail, $matches)) {
+                        $username = $matches[1];
+                    } elseif (preg_match("/'([^']+)'/", $log->event_detail, $matches)) {
+                        $username = $matches[1];
+                    } else {
+                        $username = 'Unknown';
+                    }
+
                     return (object)[
-                        'username' => $matches[1] ?? 'Unknown',
+                        'username' => $username,
                         'recorded_at' => $log->recorded_at,
                         'ip_address' => $log->ip_address,
                     ];
@@ -94,8 +101,14 @@ class LicenseService
             ->limit(20)
             ->get()
             ->map(function ($log) {
-                preg_match("/'([^']+)'/", $log->event_detail, $matches);
-                $log->username = $matches[1] ?? 'System';
+                if (preg_match("/\"[^\"]+\"\s+([^\s]+)/", $log->event_detail, $matches)) {
+                    $log->username = $matches[1];
+                } elseif (preg_match("/'([^']+)'/", $log->event_detail, $matches)) {
+                    $log->username = $matches[1];
+                } else {
+                    $log->username = 'System';
+                }
+                
                 $log->timestamp = $log->recorded_at;
                 $log->license_name = $log->license?->license_name;
                 return $log;
@@ -108,6 +121,31 @@ class LicenseService
             'authorizedUsers' => $authorizedUsers,
             'logs' => $logs,
         ];
+    }
+
+    public function kickUser(int $licenseId, string $username, string $hostname, \App\Models\User $admin): void
+    {
+        $license = License::with('vendor')->findOrFail($licenseId);
+
+        // Decrease the used seats count safely
+        if ($license->used_seats > 0) {
+            $license->decrement('used_seats');
+        }
+
+        // Generate the raw log string
+        $vendorName = $license->vendor ? $license->vendor->name : 'Unknown';
+        $feature = $license->license_name;
+        $detail = "({$vendorName}) KICKED: \"{$feature}\" {$username}@{$hostname} (Force removed via Web UI by {$admin->name})";
+
+        // Create log entry for the kick event
+        LicenseLog::create([
+            'license_id' => $license->id,
+            'event_type' => 'kicked',
+            'event_detail' => $detail,
+            'user_count' => $license->used_seats,
+            'recorded_at' => now(),
+            'ip_address' => request()->ip(), // optional tracking of who triggered it
+        ]);
     }
 
     public function syncAccess(string $username, array $licenseIds, array $scopeLicenseIds, User $grantor, string $status = 'enable'): void

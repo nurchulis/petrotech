@@ -175,6 +175,21 @@ class LicenseController extends Controller
         return back()->with('success', 'License status updated.');
     }
 
+    public function kickUser(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'license_id' => 'required|exists:licenses,id',
+            'username' => 'required|string',
+            'hostname' => 'required|string',
+        ]);
+        
+        $license = License::findOrFail($data['license_id']);
+        $this->authorize('update', $license);
+
+        $this->service->kickUser($license->id, $data['username'], $data['hostname'], auth()->user());
+        return back()->with('success', "User {$data['username']} has been successfully kicked from the license.");
+    }
+
     public function getUsageMetrics(Request $request, int $licenseId): \Illuminate\Http\JsonResponse
     {
         $this->authorize('viewAny', License::class);

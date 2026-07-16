@@ -95,7 +95,7 @@
 @endpush
 
 @section('content')
-    <div class="row row-cards">
+    <div class="row row-cards" id="vendor-dashboard-content" style="transition: opacity 0.4s ease-in-out;">
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header border-bottom bg-white py-3">
@@ -111,7 +111,7 @@
                             </h2>
                             <div class="d-flex align-items-center flex-wrap gap-2 text-dark small">
                                 <span>Server: 
-                                    <code id="server-address">{{ $vendor->name_server ?? ($vendor->port ? $vendor->port . '@' . $server?->hostname : 'N/A') }}</code>
+                                    <code id="server-address">{{ $vendor->name_server ?? (($vendor->port ?? $server?->port) . '@' . $server?->hostname) ?? 'N/A' }}</code>
                                     <button class="btn btn-icon btn-ghost-primary btn-sm ms-1 border-0" 
                                         onclick="copyToClipboard('server-address', this)"
                                         title="Copy Server Info">
@@ -126,9 +126,18 @@
                                     <i class="fas fa-history me-1"></i> Last Update From Server: 
                                     <span class="fw-bold">{{ $vendor->last_updated ? $vendor->last_updated->format('d M Y H:i') : 'Never' }}</span>
                                 </span>
+                                <span class="badge bg-green-lt text-success ms-2" id="live-sync-indicator" style="display: none; transition: opacity 0.3s ease;">
+                                    <span class="status-dot status-dot-animated bg-success me-1"></span> Live Syncing...
+                                </span>
                             </div>
                         </div>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <label class="form-check form-switch mb-0" style="cursor: pointer;" title="Toggle Auto-Refresh">
+                                <input class="form-check-input" type="checkbox" id="liveSyncToggle" checked>
+                                <span class="form-check-label text-muted small fw-bold">Live Auto-Refresh</span>
+                            </label>
+                            
+                            <div class="d-flex gap-2">
                             @can('create', \App\Models\License::class)
                                 <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#editVendorModal"
@@ -142,6 +151,7 @@
                             <a href="{{ route('admin.licenses.index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-chevron-left me-1"></i> Back to List
                             </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -443,6 +453,7 @@
                                                                                 <th class="fw-bold py-2">Username</th>
                                                                                 <th class="fw-bold py-2">IP Location</th>
                                                                                 <th class="fw-bold py-2">Checkin At</th>
+                                                                                <th class="fw-bold py-2 text-end">Action</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -472,6 +483,13 @@
                                                                                         <div class="text-dark opacity-50" style="font-size: 0.7rem;">
                                                                                             {{ $checkout->recorded_at->diffForHumans() }}
                                                                                         </div>
+                                                                                    </td>
+                                                                                    <td class="text-end">
+                                                                                        <button class="btn btn-sm btn-outline-danger" 
+                                                                                                onclick="openKickModal({{ $f->id }}, '{{ addslashes($checkout->username) }}', '{{ addslashes($checkout->ip_address) }}', '{{ addslashes($f->license_name) }}')"
+                                                                                                title="Kick User">
+                                                                                            <i class="fas fa-user-times me-1"></i> Kick
+                                                                                        </button>
                                                                                     </td>
                                                                                 </tr>
                                                                             @endforeach
@@ -1074,7 +1092,7 @@
 
     @push('scripts')
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
+            window.initDashboardJS = function () {
                 window.openEditVendorModal = function (id, name, nameServer, serverId, port, status, description) {
                     document.getElementById('editVendorForm').action = '/admin/vendors/' + id;
                     document.getElementById('edit_vendor_name').value = name;
@@ -1534,10 +1552,167 @@
                 // Re-animate when summary collapse is expanded
                 const featureUsageSummary = document.getElementById('featureUsageSummary');
                 if (featureUsageSummary) {
-                    featureUsageSummary.addEventListener('show.bs.collapse', function () {
+                    // Remove old listener to avoid duplicates if re-inited
+                    const newFeatureUsageSummary = featureUsageSummary.cloneNode(true);
+                    featureUsageSummary.parentNode.replaceChild(newFeatureUsageSummary, featureUsageSummary);
+                    
+                    newFeatureUsageSummary.addEventListener('show.bs.collapse', function () {
                         animateProgressBars();
                     });
                 }
+            };
+
+            // Run init on first load
+            document.addEventListener("DOMContentLoaded", function () {
+                window.initDashboardJS();
+                startLiveSync();
             });
+
+            let liveSyncInterval = null;
+            let isSyncing = false;
+
+            function startLiveSync() {
+                const toggle = document.getElementById('liveSyncToggle');
+                const indicator = document.getElementById('live-sync-indicator');
+                
+                if (liveSyncInterval) clearInterval(liveSyncInterval);
+
+                liveSyncInterval = setInterval(async () => {
+                    if (!toggle || !toggle.checked || isSyncing) return;
+                    
+                    isSyncing = true;
+                    indicator.style.display = 'inline-flex';
+                    
+                    const container = document.getElementById('vendor-dashboard-content');
+                    if (container) {
+                        container.style.opacity = '0.6';
+                    }
+
+                    try {
+                        const response = await fetch(window.location.href, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        const html = await response.text();
+                        
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        const newContainer = doc.getElementById('vendor-dashboard-content');
+                        if (newContainer && container) {
+                            // Remember active tab
+                            let activeTabId = null;
+                            const activeLink = container.querySelector('.nav-tabs .nav-link.active');
+                            if (activeLink) activeTabId = activeLink.getAttribute('href');
+                            
+                            // Remember expanded collapse rows
+                            const expandedRows = Array.from(container.querySelectorAll('.collapse.show')).map(el => el.id).filter(id => id);
+
+                            // Pre-set active tab in new HTML to prevent visual jump
+                            if (activeTabId) {
+                                // Remove current active classes in newContainer
+                                newContainer.querySelectorAll('.nav-tabs .nav-link').forEach(el => {
+                                    el.classList.remove('active');
+                                    el.setAttribute('aria-selected', 'false');
+                                });
+                                newContainer.querySelectorAll('.tab-content .tab-pane').forEach(el => el.classList.remove('active', 'show'));
+                                
+                                // Set desired active classes
+                                const targetLink = newContainer.querySelector(`.nav-tabs .nav-link[href="${activeTabId}"]`);
+                                if (targetLink) {
+                                    targetLink.classList.add('active');
+                                    targetLink.setAttribute('aria-selected', 'true');
+                                }
+                                const targetPane = newContainer.querySelector(`.tab-content .tab-pane${activeTabId}`);
+                                if (targetPane) targetPane.classList.add('active', 'show');
+                            }
+                            
+                            // Pre-set expanded rows in new HTML
+                            expandedRows.forEach(id => {
+                                const targetRow = newContainer.querySelector(`#${id}`);
+                                if (targetRow) {
+                                    targetRow.classList.add('show');
+                                }
+                            });
+
+                            // Replace HTML
+                            container.innerHTML = newContainer.innerHTML;
+                            
+                            // Re-init Javascript components for the newly replaced elements
+                            window.initDashboardJS();
+                        }
+                    } catch (error) {
+                        console.error('Live Sync Error:', error);
+                    } finally {
+                        if (container) container.style.opacity = '1';
+                        setTimeout(() => {
+                            if (!isSyncing) indicator.style.display = 'none';
+                        }, 2000);
+                        isSyncing = false;
+                    }
+                }, 10000); // 10 seconds
+            }
+
+            // Listen to toggle changes
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.id === 'liveSyncToggle') {
+                    if (e.target.checked) {
+                        startLiveSync();
+                    } else {
+                        if (liveSyncInterval) clearInterval(liveSyncInterval);
+                        document.getElementById('live-sync-indicator').style.display = 'none';
+                    }
+                }
+            });
+
+            function openKickModal(licenseId, username, ipAddress, featureName) {
+                // Determine hostname from username/ip_address if not explicitly given, or just use what we have
+                // Usually FlexLM uses hostname. We'll pass IP for now since we don't have hostname in this context
+                document.getElementById('kick_license_id').value = licenseId;
+                document.getElementById('kick_username').value = username;
+                document.getElementById('kick_hostname').value = ipAddress;
+                
+                document.getElementById('display_kick_username').textContent = username;
+                document.getElementById('display_kick_feature').textContent = featureName;
+                
+                var modal = new bootstrap.Modal(document.getElementById('kickUserModal'));
+                modal.show();
+            }
         </script>
+
+        <!-- Kick User Modal -->
+        <div class="modal modal-blur fade" id="kickUserModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-status bg-danger"></div>
+                    <form id="kickUserForm" action="{{ route('admin.licenses.kick') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="license_id" id="kick_license_id">
+                        <input type="hidden" name="username" id="kick_username">
+                        <input type="hidden" name="hostname" id="kick_hostname">
+                        
+                        <div class="modal-body text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                            <h3>Kick User?</h3>
+                            <div class="text-muted">
+                                Are you sure you want to force-remove <strong class="text-dark" id="display_kick_username"></strong> from using <strong class="text-dark" id="display_kick_feature"></strong>?
+                            </div>
+                            
+                            <div class="alert alert-danger bg-danger-lt border-0 mt-3 small text-start">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>Technical Detail:</strong> This action will trigger an <code>lmremove</code> command payload to the FlexLM Agent API to revoke the license token from the client's workstation.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="w-100">
+                                <div class="row">
+                                    <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Cancel</a></div>
+                                    <div class="col"><button type="submit" class="btn btn-danger w-100">Confirm Kick</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     @endpush
