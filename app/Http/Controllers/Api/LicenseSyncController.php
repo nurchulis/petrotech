@@ -75,8 +75,6 @@ class LicenseSyncController extends Controller
 
                     if (!$licenses->has($featureName)) {
                         // Optionally create new feature if it doesn't exist
-                        // Use the first admin user as the system creator (for API-created licenses)
-                        $systemAdmin = \App\Models\User::where('role', 'admin')->first();
                         $license = License::create([
                             'license_name' => $featureName,
                             'application_name' => $data['vendor_name'] . ' App', // default fallback
@@ -87,7 +85,7 @@ class LicenseSyncController extends Controller
                             'status' => 'enable',
                             'expiry_date' => now()->addYears(1),
                             'license_server_id' => $server->id,
-                            'created_by' => $systemAdmin?->id ?? 1,
+                            'created_by' => 1,
                         ]);
                         $licenses->put($featureName, $license);
                     } else {
