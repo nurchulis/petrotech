@@ -111,7 +111,7 @@
                             </h2>
                             <div class="d-flex align-items-center flex-wrap gap-2 text-dark small">
                                 <span>Server: 
-                                    <code id="server-address">{{ $vendor->name_server ?? ($vendor->port ? $vendor->port . '@' . $server?->hostname : 'N/A') }}</code>
+                                    <code id="server-address">{{ $vendor->name_server ?? (($vendor->port ?? $server?->port) . '@' . $server?->hostname) ?? 'N/A' }}</code>
                                     <button class="btn btn-icon btn-ghost-primary btn-sm ms-1 border-0" 
                                         onclick="copyToClipboard('server-address', this)"
                                         title="Copy Server Info">

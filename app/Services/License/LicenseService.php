@@ -49,9 +49,16 @@ class LicenseService
                 ->orderBy('recorded_at', 'desc')
                 ->get()
                 ->map(function ($log) {
-                    preg_match("/'([^']+)'/", $log->event_detail, $matches);
+                    if (preg_match("/\"[^\"]+\"\s+([^\s]+)/", $log->event_detail, $matches)) {
+                        $username = $matches[1];
+                    } elseif (preg_match("/'([^']+)'/", $log->event_detail, $matches)) {
+                        $username = $matches[1];
+                    } else {
+                        $username = 'Unknown';
+                    }
+
                     return (object)[
-                        'username' => $matches[1] ?? 'Unknown',
+                        'username' => $username,
                         'recorded_at' => $log->recorded_at,
                         'ip_address' => $log->ip_address,
                     ];
@@ -94,8 +101,14 @@ class LicenseService
             ->limit(20)
             ->get()
             ->map(function ($log) {
-                preg_match("/'([^']+)'/", $log->event_detail, $matches);
-                $log->username = $matches[1] ?? 'System';
+                if (preg_match("/\"[^\"]+\"\s+([^\s]+)/", $log->event_detail, $matches)) {
+                    $log->username = $matches[1];
+                } elseif (preg_match("/'([^']+)'/", $log->event_detail, $matches)) {
+                    $log->username = $matches[1];
+                } else {
+                    $log->username = 'System';
+                }
+                
                 $log->timestamp = $log->recorded_at;
                 $log->license_name = $log->license?->license_name;
                 return $log;

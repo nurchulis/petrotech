@@ -234,7 +234,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <code
-                                        id="server-{{ $v->id }}">{{ $v->name_server ?? ($v->port ? $v->port . '@' . optional($v->server)->server_name : 'N/A') }}</code>
+                                        id="server-{{ $v->id }}">{{ $v->name_server ?? (($v->port ?? optional($v->server)->port) . '@' . optional($v->server)->hostname) ?? 'N/A' }}</code>
                                     <button class="btn btn-icon btn-ghost-primary btn-sm ms-2 border-0"
                                         onclick="event.stopPropagation(); copyToClipboard('server-{{ $v->id }}', this)"
                                         title="Copy Server Info">
@@ -420,7 +420,7 @@
                 var editModal = new bootstrap.Modal(document.getElementById('editVendorModal'));
                 editModal.show();
             @else
-                                        var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
+                                                                var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
                 createModal.show();
             @endif
         @endif
