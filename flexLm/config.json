@@ -1,5 +1,5 @@
 {
-  "api_url": "http://127.0.0.1:8000/api/v1/licenses/sync",
+  "api_url": "https://lm.patratel.co.id/api/v1/licenses/sync",
   "sync_interval_seconds": 10,
   "vendors": [
     {

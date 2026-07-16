@@ -14,7 +14,7 @@ config_path = os.path.join(BASE_DIR, 'config.json')
 with open(config_path, 'r') as f:
     config = json.load(f)
 
-API_URL = config.get('api_url', 'http://127.0.0.1:8000/api/v1/licenses/sync')
+API_URL = config.get('api_url', 'https://lm.patratel.co.id/api/v1/licenses/sync')
 SYNC_INTERVAL = config.get('sync_interval_seconds', 10)
 
 # Mappings
