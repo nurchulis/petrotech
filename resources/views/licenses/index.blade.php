@@ -86,7 +86,7 @@
                     <div class="col-md-3 bg-light-lt">
                         <div class="card-body text-center py-4 h-100 d-flex flex-column justify-content-center">
                             <div class="text-muted mb-1 text-uppercase fw-bold"
-                                style="font-size: 0.65rem; letter-spacing: 0.05em;">Total Assets</div>
+                                style="font-size: 0.65rem; letter-spacing: 0.05em;">Total</div>
                             <div class="h2 mb-0 fw-bold text-dark">{{ $totalVendors }}</div>
                             <div class="small text-muted">Registered Vendors</div>
                         </div>
@@ -420,7 +420,7 @@
                 var editModal = new bootstrap.Modal(document.getElementById('editVendorModal'));
                 editModal.show();
             @else
-                                                                var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
+                                                                                        var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
                 createModal.show();
             @endif
         @endif
