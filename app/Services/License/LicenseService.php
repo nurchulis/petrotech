@@ -123,6 +123,31 @@ class LicenseService
         ];
     }
 
+    public function kickUser(int $licenseId, string $username, string $hostname, \App\Models\User $admin): void
+    {
+        $license = License::with('vendor')->findOrFail($licenseId);
+
+        // Decrease the used seats count safely
+        if ($license->used_seats > 0) {
+            $license->decrement('used_seats');
+        }
+
+        // Generate the raw log string
+        $vendorName = $license->vendor ? $license->vendor->name : 'Unknown';
+        $feature = $license->license_name;
+        $detail = "({$vendorName}) KICKED: \"{$feature}\" {$username}@{$hostname} (Force removed via Web UI by {$admin->name})";
+
+        // Create log entry for the kick event
+        LicenseLog::create([
+            'license_id' => $license->id,
+            'event_type' => 'kicked',
+            'event_detail' => $detail,
+            'user_count' => $license->used_seats,
+            'recorded_at' => now(),
+            'ip_address' => request()->ip(), // optional tracking of who triggered it
+        ]);
+    }
+
     public function syncAccess(string $username, array $licenseIds, array $scopeLicenseIds, User $grantor, string $status = 'enable'): void
     {
         // 1. Remove access for any licenses in the scope that are NOT in the new list

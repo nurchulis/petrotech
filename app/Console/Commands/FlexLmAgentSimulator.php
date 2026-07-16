@@ -35,13 +35,35 @@ class FlexLmAgentSimulator extends Command
         $baseUrl = rtrim($this->option('url'), '/');
         $apiUrl = $baseUrl . '/api/v1/licenses/sync';
 
-        // Features map with realistic seats for Schlumberger
-        $features = [
-            'DATA_ANALYZER' => 5,
-            'EDM' => 3,
-            '3D' => 2,
-            'PROFILE' => 4
-        ];
+        // Fetch Server
+        $server = \App\Models\LicenseServer::where('hostname', $serverName)
+            ->orWhere('server_name', $serverName)
+            ->first();
+
+        if (!$server) {
+            $this->error("Server not found: {$serverName}");
+            return;
+        }
+
+        // Fetch Vendor
+        $vendor = \App\Models\Vendor::where('name', $vendorName)
+            ->where('license_server_id', $server->id)
+            ->first();
+
+        if (!$vendor) {
+            $this->error("Vendor not found: {$vendorName} on server {$serverName}");
+            return;
+        }
+
+        // Fetch active licenses/features for this vendor
+        $licenses = \App\Models\License::where('vendor_id', $vendor->id)->get();
+        if ($licenses->isEmpty()) {
+            $this->error("No features/licenses found for vendor {$vendorName}.");
+            return;
+        }
+
+        // Map them to key-value pairs: 'FeatureName' => TotalSeats
+        $features = $licenses->pluck('total_seats', 'license_name')->toArray();
 
         // Dummy users and hosts
         $users = ['ahmad.ramadhan', 'budi.santoso', 'siti.rahayu', 'eko.prasetyo', 'fajar.hidayat'];
