@@ -619,6 +619,7 @@
                                         <th>Feature</th>
                                         <th>Timestamp</th>
                                         <th>Event</th>
+                                        <th>Event Detail</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -658,10 +659,25 @@
                                                     {{ str_replace('_', ' ', strtoupper($log->event_type)) }}
                                                 </span>
                                             </td>
+                                            <td>
+                                                @if($log->event_detail)
+                                                    @php
+                                                        $detail = $log->event_detail;
+                                                        if (preg_match('/\([^()]*\)\s*$/', $detail, $matches)) {
+                                                            $displayDetail = $matches[0];
+                                                        } else {
+                                                            $displayDetail = $detail;
+                                                        }
+                                                    @endphp
+                                                    <span class="small text-dark" style="white-space: nowrap;">{{ $displayDetail }}</span>
+                                                @else
+                                                    <span class="small text-muted">-</span>
+                                                @endif
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="py-5 border-0">
+                                            <td colspan="5" class="py-5 border-0">
                                                 <div class="text-center p-4">
                                                     <div class="bg-light-lt d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px;">
                                                         <i class="fas fa-history fa-2x text-muted opacity-50"></i>
@@ -1093,6 +1109,26 @@
     @push('scripts')
         <script>
             window.initDashboardJS = function () {
+                // Toggle expand/collapse for event detail
+                document.querySelectorAll('.toggle-detail').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var idx = this.getAttribute('data-index');
+                        var shortEl = document.getElementById('detail-short-' + idx);
+                        var fullEl = document.getElementById('detail-full-' + idx);
+                        var isExpanded = !fullEl.classList.contains('d-none');
+
+                        if (isExpanded) {
+                            fullEl.classList.add('d-none');
+                            shortEl.classList.remove('d-none');
+                            this.innerHTML = '<i class="fas fa-chevron-down me-1" style="font-size: 10px;"></i>Show more';
+                        } else {
+                            shortEl.classList.add('d-none');
+                            fullEl.classList.remove('d-none');
+                            this.innerHTML = '<i class="fas fa-chevron-up me-1" style="font-size: 10px;"></i>Show less';
+                        }
+                    });
+                });
+
                 window.openEditVendorModal = function (id, name, nameServer, serverId, port, status, description) {
                     document.getElementById('editVendorForm').action = '/admin/vendors/' + id;
                     document.getElementById('edit_vendor_name').value = name;
