@@ -24,5 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'An unexpected database operation error occurred. Please verify your input parameters.',
+                ], 422);
+            }
+            return back()->with('error', 'The requested operation could not be processed due to invalid parameters.');
+        });
     })->create();

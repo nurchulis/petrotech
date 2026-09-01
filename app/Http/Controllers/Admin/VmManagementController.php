@@ -66,7 +66,7 @@ class VmManagementController extends Controller
             'gpu_model'        => 'nullable|regex:/^[a-zA-Z0-9\s\-_]+$/|max:255',
             'cpu_cores'        => 'nullable|integer|min:1|max:512',
             'ram_gb'           => 'nullable|integer|min:1|max:16384',
-            'assigned_user_id' => 'nullable|exists:users,id',
+            'assigned_user_id' => 'nullable|integer|min:1|max:2147483647|exists:users,id',
             'notes'            => 'nullable|string|max:2000',
         ]);
 
@@ -107,7 +107,7 @@ class VmManagementController extends Controller
             'gpu_model'        => 'nullable|regex:/^[a-zA-Z0-9\s\-_]+$/|max:255',
             'cpu_cores'        => 'nullable|integer|min:1|max:512',
             'ram_gb'           => 'nullable|integer|min:1|max:16384',
-            'assigned_user_id' => 'nullable|exists:users,id',
+            'assigned_user_id' => 'nullable|integer|min:1|max:2147483647|exists:users,id',
             'notes'            => 'nullable|string|max:2000',
         ]);
 
