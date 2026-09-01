@@ -33,6 +33,9 @@ class LicenseController extends Controller
 
     public function vendorShow(int $vendorId): View
     {
+        if ($vendorId < 1 || $vendorId > 2147483647) {
+            abort(404);
+        }
         $this->authorize('viewAny', License::class);
         $data = $this->service->getVendorDetails($vendorId);
 
@@ -45,9 +48,9 @@ class LicenseController extends Controller
         $data = $request->validate([
             'username' => 'required|string|max:255',
             'license_ids' => 'required|array',
-            'license_ids.*' => 'exists:licenses,id',
-            'server_id' => 'required|exists:license_servers,id',
-            'vendor_id' => 'required|exists:vendors,id',
+            'license_ids.*' => 'integer|min:1|max:2147483647|exists:licenses,id',
+            'server_id' => 'required|integer|min:1|max:2147483647|exists:license_servers,id',
+            'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
             'status' => 'required|in:enable,disable',
         ]);
 
@@ -67,8 +70,8 @@ class LicenseController extends Controller
     {
         $this->authorize('viewAny', License::class);
         $data = $request->validate([
-            'username' => 'required|string',
-            'license_id' => 'required|exists:licenses,id',
+            'username' => 'required|string|max:255',
+            'license_id' => 'required|integer|min:1|max:2147483647|exists:licenses,id',
         ]);
 
         $this->service->revokeAccess($data['username'], $data['license_id']);
@@ -81,9 +84,9 @@ class LicenseController extends Controller
     {
         $this->authorize('viewAny', License::class);
         $data = $request->validate([
-            'username' => 'required|string',
-            'server_id' => 'required|exists:license_servers,id',
-            'vendor_id' => 'required|exists:vendors,id',
+            'username' => 'required|string|max:255',
+            'server_id' => 'required|integer|min:1|max:2147483647|exists:license_servers,id',
+            'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
         ]);
 
         $scopeLicenseIds = License::where('license_server_id', $data['server_id'])
@@ -111,14 +114,14 @@ class LicenseController extends Controller
         $data = $request->validate([
             'license_name' => 'required|string|max:255',
             'application_name' => 'required|string|max:255',
-            'vendor_id' => 'required|exists:vendors,id',
+            'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
             'version' => 'nullable|string|max:100',
-            'total_seats' => 'required|integer|min:0',
+            'total_seats' => 'required|integer|min:0|max:2147483647',
             'license_key' => 'nullable|string',
             'status' => 'required|in:enable,disable',
             'expiry_date' => 'required|date',
             'log_file_path' => 'nullable|string|max:500',
-            'license_server_id' => 'nullable|exists:license_servers,id',
+            'license_server_id' => 'nullable|integer|min:1|max:2147483647|exists:license_servers,id',
             'notes' => 'nullable|string',
         ]);
 
@@ -147,13 +150,13 @@ class LicenseController extends Controller
         $data = $request->validate([
             'license_name' => 'required|string|max:255',
             'application_name' => 'required|string|max:255',
-            'vendor_id' => 'required|exists:vendors,id',
+            'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
             'version' => 'nullable|string|max:100',
-            'total_seats' => 'required|integer|min:0',
+            'total_seats' => 'required|integer|min:0|max:2147483647',
             'status' => 'required|in:enable,disable',
             'expiry_date' => 'required|date',
             'log_file_path' => 'nullable|string|max:500',
-            'license_server_id' => 'nullable|exists:license_servers,id',
+            'license_server_id' => 'nullable|integer|min:1|max:2147483647|exists:license_servers,id',
             'notes' => 'nullable|string',
         ]);
 
@@ -178,9 +181,9 @@ class LicenseController extends Controller
     public function kickUser(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'license_id' => 'required|exists:licenses,id',
-            'username' => 'required|string',
-            'hostname' => 'required|string',
+            'license_id' => 'required|integer|min:1|max:2147483647|exists:licenses,id',
+            'username' => 'required|string|max:255',
+            'hostname' => 'required|string|max:255',
         ]);
         
         $license = License::findOrFail($data['license_id']);
@@ -190,9 +193,9 @@ class LicenseController extends Controller
         return back()->with('success', "User {$data['username']} has been successfully kicked from the license.");
     }
 
-    public function getUsageMetrics(Request $request, int $licenseId): \Illuminate\Http\JsonResponse
+    public function getUsageMetrics(Request $request, License $license): \Illuminate\Http\JsonResponse
     {
-        $this->authorize('viewAny', License::class);
+        $this->authorize('view', $license);
         
         $request->validate([
             'range'      => 'nullable|in:daily,weekly,monthly',
@@ -206,7 +209,7 @@ class LicenseController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        $data = $this->service->getUsageMetrics($licenseId, $range, $date, $startDate, $endDate);
+        $data = $this->service->getUsageMetrics($license->id, $range, $date, $startDate, $endDate);
 
         return response()->json($data);
     }
@@ -215,9 +218,12 @@ class LicenseController extends Controller
     {
         $this->authorize('viewAny', License::class);
 
-        $vendorId = $request->input('vendor_id');
-        $data = $this->service->getVendorDetails($vendorId);
-        $logs = $data['logs'] ?? collect();
+        $data = $request->validate([
+            'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
+        ]);
+
+        $vendorDetails = $this->service->getVendorDetails($data['vendor_id']);
+        $logs = $vendorDetails['logs'] ?? collect();
 
         // Create CSV headers
         $headers = ['Username', 'Feature', 'Timestamp', 'Event Type'];

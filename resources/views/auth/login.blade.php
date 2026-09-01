@@ -7,7 +7,7 @@
   <title>Login - Petrotechnical Platform</title>
   <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
   <!-- CSS files -->
-  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css" rel="stylesheet" crossorigin="anonymous" />
   <style>
     @import url('https://rsms.me/inter/inter.css');
 
@@ -55,12 +55,6 @@
               </linearGradient>
             </defs>
           </svg>
-          <!-- <div class="text-start lh-sm">
-            <div style="color:#1a3c6b; font-weight: 800; font-size: 1.25rem;">Petrotechnical</div>
-            <div
-              style="color:#4a7fa5; font-size: 0.8rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 600;">
-              Platform</div>
-          </div> -->
         </div>
 
         <div class="text-center mb-4" style="margin-top: 30px;">
@@ -74,12 +68,12 @@
         </div>
         @endif
 
-        <form action="{{ route('login') }}" method="POST" autocomplete="off">
+        <form action="{{ route('login') }}" method="POST" autocomplete="on">
           @csrf
           <div class="mb-3">
             <label class="form-label">Email address</label>
             <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-              placeholder="your@email.com" autocomplete="off" value="{{ old('email') }}" required autofocus>
+              placeholder="your@email.com" autocomplete="email" value="{{ old('email') }}" required autofocus>
             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
@@ -94,7 +88,7 @@
             </label>
             <div class="input-group input-group-flat">
               <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                placeholder="Your password" autocomplete="off" required>
+                placeholder="Your password" autocomplete="current-password" required>
             </div>
             @error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
           </div>
@@ -113,7 +107,7 @@
       </div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js" crossorigin="anonymous"></script>
 </body>
 
 </html>

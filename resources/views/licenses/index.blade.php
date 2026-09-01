@@ -360,23 +360,24 @@
                                     id="edit_vendor_status" required>
                                     <option value="enable">Active (Enable)</option>
                                     <option value="disable">Disabled</option>
-                                </select>
-                                @error('status')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        @else
-                            <input type="hidden" name="status" id="edit_vendor_status_hidden" value="enable">
-                        @endif
+                            <input type="text" class="form-control" name="name" id="edit_vendor_name" required>
+                        </div>
                         <div class="mb-3">
-                            <label class="form-label">Description (Optional)</label>
-                            <textarea class="form-control" name="description" id="edit_vendor_description"
-                                rows="2"></textarea>
+                            <label class="form-label">Server Info (port@hostname)</label>
+                            <input type="text" class="form-control" name="name_server" id="edit_name_server"
+                                placeholder="e.g. 27000@10.0.0.1">
+                        </div>
+                        <input type="hidden" name="license_server_id" id="edit_vendor_server" value="">
+                        <input type="hidden" name="port" id="edit_vendor_port" value="">
+                        <input type="hidden" name="status" id="edit_vendor_status" value="enable">
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" id="edit_vendor_description" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn me-auto" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary ms-auto">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -384,43 +385,59 @@
     </div>
 
     <script>
-        function openEditVendorModal(id, name, nameServer, serverId, port, status, description) {
-            document.getElementById('editVendorForm').action = '/admin/vendors/' + id;
-            document.getElementById('edit_vendor_name').value = name;
-            document.getElementById('edit_name_server').value = nameServer;
-            if (document.getElementById('edit_vendor_server')) {
-                document.getElementById('edit_vendor_server').value = serverId;
-            }
-            if (document.getElementById('edit_vendor_port')) {
-                document.getElementById('edit_vendor_port').value = port;
-            }
-            if (document.getElementById('edit_vendor_status')) {
-                document.getElementById('edit_vendor_status').value = status;
-            }
-            if (document.getElementById('edit_vendor_status_hidden')) {
-                document.getElementById('edit_vendor_status_hidden').value = status;
-            }
-            document.getElementById('edit_vendor_description').value = description;
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.btn-edit-vendor').forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const dataset = this.dataset;
+                    const form = document.getElementById('editVendorForm');
+                    if (form) {
+                        form.action = '/admin/vendors/' + dataset.id;
+                    }
+                    const nameInput = document.getElementById('edit_vendor_name');
+                    if (nameInput) nameInput.value = dataset.name || '';
+                    
+                    const serverInput = document.getElementById('edit_name_server');
+                    if (serverInput) serverInput.value = dataset.nameServer || '';
+                    
+                    const serverIdInput = document.getElementById('edit_vendor_server');
+                    if (serverIdInput) serverIdInput.value = dataset.serverId || '';
+                    
+                    const portInput = document.getElementById('edit_vendor_port');
+                    if (portInput) portInput.value = dataset.port || '';
+                    
+                    const statusInput = document.getElementById('edit_vendor_status');
+                    if (statusInput) statusInput.value = dataset.status || 'enable';
+                    
+                    const descInput = document.getElementById('edit_vendor_description');
+                    if (descInput) descInput.value = dataset.description || '';
+                });
+            });
+        });
 
         function copyToClipboard(id, btn) {
-            const text = document.getElementById(id).innerText;
+            const el = document.getElementById(id);
+            if (!el) return;
+            const text = el.innerText;
             navigator.clipboard.writeText(text).then(() => {
                 const icon = btn.querySelector('i');
-                const originalClass = icon.className;
-                icon.className = 'fas fa-check text-success';
-                setTimeout(() => {
-                    icon.className = originalClass;
-                }, 2000);
+                if (icon) {
+                    const originalClass = icon.className;
+                    icon.className = 'fas fa-check text-success';
+                    setTimeout(() => {
+                        icon.className = originalClass;
+                    }, 2000);
+                }
             });
         }
+
         // Auto-reopen modals on validation error
         @if($errors->any())
             @if(old('_method') == 'PUT')
                 var editModal = new bootstrap.Modal(document.getElementById('editVendorModal'));
                 editModal.show();
             @else
-                                                                                        var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
+                var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
                 createModal.show();
             @endif
         @endif

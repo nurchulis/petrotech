@@ -139,9 +139,15 @@
                             
                             <div class="d-flex gap-2">
                             @can('create', \App\Models\License::class)
-                                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+                                <button class="btn btn-outline-secondary btn-sm btn-edit-vendor" data-bs-toggle="modal"
                                     data-bs-target="#editVendorModal"
-                                    onclick="openEditVendorModal({{ $vendor->id }}, '{{ addslashes($vendor->name) }}', '{{ addslashes($vendor->name_server ?? '') }}', '{{ $vendor->license_server_id }}', '{{ $vendor->port }}', '{{ $vendor->status }}', '{{ addslashes($vendor->description ?? '') }}')">
+                                    data-id="{{ $vendor->id }}"
+                                    data-name="{{ $vendor->name }}"
+                                    data-name-server="{{ $vendor->name_server ?? '' }}"
+                                    data-server-id="{{ $vendor->license_server_id ?? '' }}"
+                                    data-port="{{ $vendor->port ?? '' }}"
+                                    data-status="{{ $vendor->status }}"
+                                    data-description="{{ $vendor->description ?? '' }}">
                                     <i class="fas fa-edit me-1"></i> Edit Vendor
                                 </button>
                                 <!-- <a href="{{ route('admin.licenses.create', ['vendor_id' => $vendor->id, 'server_id' => $server?->id]) }}" class="btn btn-primary btn-sm">
@@ -485,8 +491,11 @@
                                                                                         </div>
                                                                                     </td>
                                                                                     <td class="text-end">
-                                                                                        <button class="btn btn-sm btn-outline-danger" 
-                                                                                                onclick="openKickModal({{ $f->id }}, '{{ addslashes($checkout->username) }}', '{{ addslashes($checkout->ip_address) }}', '{{ addslashes($f->license_name) }}')"
+                                                                                        <button class="btn btn-sm btn-outline-danger btn-kick-user" 
+                                                                                                data-license-id="{{ $f->id }}"
+                                                                                                data-username="{{ $checkout->username }}"
+                                                                                                data-ip-address="{{ $checkout->ip_address }}"
+                                                                                                data-license-name="{{ $f->license_name }}"
                                                                                                 title="Kick User">
                                                                                             <i class="fas fa-user-times me-1"></i> Kick
                                                                                         </button>
@@ -809,8 +818,10 @@
                                             </td>
                                             <td class="text-end">
                                                 <div class="btn-list justify-content-end">
-                                                    <button class="btn btn-icon btn-sm btn-outline-primary"
-                                                        onclick="openEditModal('{{ $user->username }}', {{ json_encode($user->accessibleLicenses->pluck('id')) }}, '{{ $user->status }}')"
+                                                    <button class="btn btn-icon btn-sm btn-outline-primary btn-edit-access"
+                                                        data-username="{{ $user->username }}"
+                                                        data-licenses="{{ json_encode($user->accessibleLicenses->pluck('id')) }}"
+                                                        data-status="{{ $user->status }}"
                                                         title="Edit Access">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -820,8 +831,8 @@
                                                         <input type="hidden" name="username" value="{{ $user->username }}">
                                                         <input type="hidden" name="server_id" value="{{ $server?->id }}">
                                                         <input type="hidden" name="vendor_id" value="{{ $vendor->id }}">
-                                                        <button type="button" class="btn btn-icon btn-sm btn-outline-danger"
-                                                            onclick="triggerDeleteConfirm(this, '{{ $user->username }}')"
+                                                        <button type="button" class="btn btn-icon btn-sm btn-outline-danger btn-delete-access"
+                                                            data-username="{{ $user->username }}"
                                                             title="Delete All Access">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -1129,24 +1140,86 @@
                     });
                 });
 
-                window.openEditVendorModal = function (id, name, nameServer, serverId, port, status, description) {
-                    document.getElementById('editVendorForm').action = '/admin/vendors/' + id;
-                    document.getElementById('edit_vendor_name').value = name;
-                    document.getElementById('edit_name_server').value = nameServer;
-                    if (document.getElementById('edit_vendor_server')) {
-                        document.getElementById('edit_vendor_server').value = serverId;
-                    }
-                    if (document.getElementById('edit_vendor_port')) {
-                        document.getElementById('edit_vendor_port').value = port;
-                    }
-                    if (document.getElementById('edit_vendor_status')) {
-                        document.getElementById('edit_vendor_status').value = status;
-                    }
-                    if (document.getElementById('edit_vendor_status_hidden')) {
-                        document.getElementById('edit_vendor_status_hidden').value = status;
-                    }
-                    document.getElementById('edit_vendor_description').value = description;
-                };
+                // Edit Vendor Button Handlers
+                document.querySelectorAll('.btn-edit-vendor').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const d = this.dataset;
+                        const form = document.getElementById('editVendorForm');
+                        if (form) form.action = '/admin/vendors/' + (d.id || '');
+                        const nameEl = document.getElementById('edit_vendor_name');
+                        if (nameEl) nameEl.value = d.name || '';
+                        const nsEl = document.getElementById('edit_name_server');
+                        if (nsEl) nsEl.value = d.nameServer || '';
+                        const srvEl = document.getElementById('edit_vendor_server');
+                        if (srvEl) srvEl.value = d.serverId || '';
+                        const portEl = document.getElementById('edit_vendor_port');
+                        if (portEl) portEl.value = d.port || '';
+                        const statusEl = document.getElementById('edit_vendor_status');
+                        if (statusEl) statusEl.value = d.status || 'enable';
+                        const descEl = document.getElementById('edit_vendor_description');
+                        if (descEl) descEl.value = d.description || '';
+                    });
+                });
+
+                // Edit Access Button Handlers
+                document.querySelectorAll('.btn-edit-access').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const username = this.dataset.username || '';
+                        let licenseIds = [];
+                        try {
+                            licenseIds = JSON.parse(this.dataset.licenses || '[]');
+                        } catch (e) {
+                            licenseIds = [];
+                        }
+                        const status = this.dataset.status || 'enable';
+
+                        document.getElementById('editUsernameLabel').textContent = username;
+                        document.getElementById('editUsernameInput').value = username;
+                        
+                        const statusSelect = document.getElementById('edit_access_status');
+                        if (statusSelect) {
+                            statusSelect.value = status;
+                        }
+
+                        // Uncheck all first
+                        const checkboxes = document.querySelectorAll('.edit-feature-checkbox');
+                        checkboxes.forEach(cb => {
+                            cb.checked = licenseIds.includes(parseInt(cb.value));
+                        });
+
+                        updateDropdownCount('.edit-feature-checkbox', '#editSelectedCount');
+
+                        var myModal = new bootstrap.Modal(document.getElementById('editAccessModal'));
+                        myModal.show();
+                    });
+                });
+
+                // Delete Access Button Handlers
+                document.querySelectorAll('.btn-delete-access').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const username = this.dataset.username || '';
+                        document.getElementById('deleteUsernameLabel').textContent = username;
+                        formToSubmit = this.closest('form');
+                        var deleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                        deleteModal.show();
+                    });
+                });
+
+                // Kick User Button Handlers
+                document.querySelectorAll('.btn-kick-user').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const d = this.dataset;
+                        document.getElementById('kick_license_id').value = d.licenseId || '';
+                        document.getElementById('kick_username').value = d.username || '';
+                        document.getElementById('kick_hostname').value = d.ipAddress || '';
+                        
+                        document.getElementById('display_kick_username').textContent = d.username || '';
+                        document.getElementById('display_kick_feature').textContent = d.licenseName || '';
+                        
+                        var modal = new bootstrap.Modal(document.getElementById('kickUserModal'));
+                        modal.show();
+                    });
+                });
 
                 // Tooltips
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
