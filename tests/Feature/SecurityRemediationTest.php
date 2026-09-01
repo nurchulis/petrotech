@@ -20,6 +20,11 @@ class SecurityRemediationTest extends TestCase
     {
         parent::setUp();
 
+        // Bypass CSRF checks in test environment
+        $this->withoutMiddleware([
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        ]);
+
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
 
