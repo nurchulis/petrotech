@@ -264,9 +264,17 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                                <button class="btn btn-sm btn-outline-secondary btn-edit-vendor"
+                                    data-bs-toggle="modal"
                                     data-bs-target="#editVendorModal"
-                                    onclick="event.stopPropagation(); openEditVendorModal({{ $v->id }}, '{{ addslashes($v->name) }}', '{{ addslashes($v->name_server ?? '') }}', '{{ $v->license_server_id }}', '{{ $v->port }}', '{{ $v->status }}', '{{ addslashes($v->description ?? '') }}')">
+                                    data-id="{{ $v->id }}"
+                                    data-name="{{ $v->name }}"
+                                    data-name-server="{{ $v->name_server ?? '' }}"
+                                    data-server-id="{{ $v->license_server_id ?? '' }}"
+                                    data-port="{{ $v->port ?? '' }}"
+                                    data-status="{{ $v->status }}"
+                                    data-description="{{ $v->description ?? '' }}"
+                                    onclick="event.stopPropagation()">
                                     Edit
                                 </button>
                                 <a href="{{ route('admin.licenses.vendor', $v->id) }}"
@@ -350,34 +358,30 @@
                                 <label class="form-label required">Port</label>
                                 <input type="text" class="form-control" name="port" id="edit_vendor_port" required>
                             </div>
-                            <div class="mb-3 d-none">
-                                <label class="form-label">Admin Hidden Field (Disabled)</label>
-                                <input type="text" class="form-control" value="SYSTEM_LOCKED" disabled>
-                            </div>
                             <div class="mb-3">
                                 <label class="form-label required">Status</label>
                                 <select class="form-select @error('status') is-invalid @enderror" name="status"
                                     id="edit_vendor_status" required>
                                     <option value="enable">Active (Enable)</option>
                                     <option value="disable">Disabled</option>
-                            <input type="text" class="form-control" name="name" id="edit_vendor_name" required>
-                        </div>
+                                </select>
+                                @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @else
+                            <input type="hidden" name="license_server_id" id="edit_vendor_server" value="">
+                            <input type="hidden" name="port" id="edit_vendor_port" value="">
+                            <input type="hidden" name="status" id="edit_vendor_status" value="enable">
+                        @endif
                         <div class="mb-3">
-                            <label class="form-label">Server Info (port@hostname)</label>
-                            <input type="text" class="form-control" name="name_server" id="edit_name_server"
-                                placeholder="e.g. 27000@10.0.0.1">
-                        </div>
-                        <input type="hidden" name="license_server_id" id="edit_vendor_server" value="">
-                        <input type="hidden" name="port" id="edit_vendor_port" value="">
-                        <input type="hidden" name="status" id="edit_vendor_status" value="enable">
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" name="description" id="edit_vendor_description" rows="3"></textarea>
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" name="description" id="edit_vendor_description" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary ms-auto">Save Changes</button>
+                        <button type="button" class="btn me-auto" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -388,7 +392,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.btn-edit-vendor').forEach(function(button) {
                 button.addEventListener('click', function(e) {
-                    e.stopPropagation();
                     const dataset = this.dataset;
                     const form = document.getElementById('editVendorForm');
                     if (form) {
