@@ -73,8 +73,8 @@ class DemoDataSeeder extends Seeder
         ]);
 
         // ─── Vendors ───────────────────────────────────────────────────────
-        $vendorLgcx = Vendor::create(['name' => 'schlumb', 'company' => 'SLB (Schlumberger)', 'description' => 'Schlumberger FlexLM Vendor', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subMinutes(5)]);
-        $vendorDaemon = Vendor::create(['name' => 'landmark', 'company' => 'Halliburton Landmark', 'description' => 'Halliburton Landmark FlexLM Vendor', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subHours(1)]);
+        $vendorLgcx = Vendor::create(['name' => 'schlumb', 'company' => 'Company A', 'description' => 'Schlumberger FlexLM Vendor', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subMinutes(5)]);
+        $vendorDaemon = Vendor::create(['name' => 'landmark', 'company' => 'Company B', 'description' => 'Halliburton Landmark FlexLM Vendor', 'license_server_id' => $serverJKT->id, 'status' => 'enable', 'last_updated' => now()->subHours(1)]);
 
         // ─── Licenses (Features) ──────────────────────────────────────────
         $licenses = [
@@ -204,7 +204,7 @@ class DemoDataSeeder extends Seeder
                         $detail = "({$vendorName}) OUT: \"{$feature}\" {$logUser}@{$host}";
                 }
 
-                $companies = ['Pertamina Hulu Energi', 'Pertamina EP', 'SKK Migas', 'Pertamina International EP', 'SLB', 'Halliburton'];
+                $companies = ['Company A', 'Company B', 'Company C'];
                 LicenseLog::create([
                     'license_id'   => $license->id,
                     'company'      => $companies[array_rand($companies)],
@@ -256,7 +256,7 @@ class DemoDataSeeder extends Seeder
             'status'      => 'active',
         ]);
 
-        $vendorLicsrv = Vendor::create(['name' => 'licsrv', 'company' => 'Petrotech Systems', 'description' => 'License Server Vendor', 'license_server_id' => $serverSBY->id, 'status' => 'enable', 'last_updated' => now()->subDays(1)]);
+        $vendorLicsrv = Vendor::create(['name' => 'licsrv', 'company' => 'Company C', 'description' => 'License Server Vendor', 'license_server_id' => $serverSBY->id, 'status' => 'enable', 'last_updated' => now()->subDays(1)]);
 
         foreach ($additionalFeatures as $feat) {
             $vendorId = match ($feat['vendor']) {
@@ -328,7 +328,7 @@ class DemoDataSeeder extends Seeder
                         $detail2 = "({$vendorName}) OUT: \"{$feature2}\" {$logUser2}@{$host2}";
                 }
 
-                $companies2 = ['Pertamina Hulu Energi', 'Pertamina EP', 'SKK Migas', 'Pertamina International EP', 'SLB', 'Halliburton'];
+                $companies2 = ['Company A', 'Company B', 'Company C'];
                 LicenseLog::create([
                     'license_id'   => $license->id,
                     'company'      => $companies2[array_rand($companies2)],
