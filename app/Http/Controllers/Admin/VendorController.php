@@ -12,6 +12,7 @@ class VendorController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', 'regex:/^[\pL\pN\s\-\.\@\(\)_]+$/u', 'unique:vendors,name'],
+            'company' => ['nullable', 'string', 'max:255'],
             'name_server' => ['nullable', 'string', 'max:255', 'regex:/^[\pL\pN\s\-\.\@\:\/_\(\)]+$/u'],
             'description' => 'nullable|string|max:1000',
             'license_server_id' => 'nullable|integer|min:1|max:2147483647|exists:license_servers,id',
@@ -28,6 +29,7 @@ class VendorController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', 'regex:/^[\pL\pN\s\-\.\@\(\)_]+$/u', 'unique:vendors,name,' . $vendor->id],
+            'company' => ['nullable', 'string', 'max:255'],
             'name_server' => ['nullable', 'string', 'max:255', 'regex:/^[\pL\pN\s\-\.\@\:\/_\(\)]+$/u'],
             'description' => 'nullable|string|max:1000',
             'license_server_id' => 'nullable|integer|min:1|max:2147483647|exists:license_servers,id',

@@ -108,6 +108,9 @@
                                     <span class="status-dot bg-danger me-2"></span>
                                 @endif
                                 VENDOR: {{ $vendor->name }}
+                                @if($vendor->company)
+                                    <span class="badge bg-blue-lt text-blue ms-2 border-0 fw-normal" style="font-size: 0.85rem;">{{ $vendor->company }}</span>
+                                @endif
                             </h2>
                             <div class="d-flex align-items-center flex-wrap gap-2 text-dark small">
                                 <span>Server: 
@@ -143,6 +146,7 @@
                                     data-bs-target="#editVendorModal"
                                     data-id="{{ $vendor->id }}"
                                     data-name="{{ $vendor->name }}"
+                                    data-company="{{ $vendor->company ?? '' }}"
                                     data-name-server="{{ $vendor->name_server ?? '' }}"
                                     data-server-id="{{ $vendor->license_server_id ?? '' }}"
                                     data-port="{{ $vendor->port ?? '' }}"
@@ -625,6 +629,7 @@
                                 <thead>
                                     <tr>
                                         <th>User</th>
+                                        <th>Company</th>
                                         <th>Feature</th>
                                         <th>Timestamp</th>
                                         <th>Event</th>
@@ -640,6 +645,9 @@
                                                         class="avatar avatar-xs me-2 rounded-circle bg-blue-lt text-blue">{{ substr($log->username, 0, 1) }}</span>
                                                     <span class="small fw-bold">{{ $log->username }}</span>
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-blue-lt text-blue fw-normal">{{ $log->company ?? $vendor->company ?? 'Pertamina' }}</span>
                                             </td>
                                             <td><span class="small text-dark">{{ $log->license_name ?? 'Unknown' }}</span></td>
                                             <td><span
@@ -1041,6 +1049,10 @@
                             <input type="text" class="form-control" name="name" id="edit_vendor_name" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Company</label>
+                            <input type="text" class="form-control" name="company" id="edit_vendor_company" placeholder="e.g. SLB (Schlumberger)">
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label required">Name Server (e.g. 2094@LLJOSAJ1)</label>
                             <input type="text" class="form-control" name="name_server" id="edit_name_server" placeholder="e.g. 2094@LLJOSAJ1" required>
                         </div>
@@ -1148,6 +1160,8 @@
                         if (form) form.action = '/admin/vendors/' + (d.id || '');
                         const nameEl = document.getElementById('edit_vendor_name');
                         if (nameEl) nameEl.value = d.name || '';
+                        const companyEl = document.getElementById('edit_vendor_company');
+                        if (companyEl) companyEl.value = d.company || '';
                         const nsEl = document.getElementById('edit_name_server');
                         if (nsEl) nsEl.value = d.nameServer || '';
                         const srvEl = document.getElementById('edit_vendor_server');
