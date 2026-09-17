@@ -57,7 +57,7 @@ class LicenseService
                         $username = 'Unknown';
                     }
 
-                    return (object)[
+                    return (object) [
                         'username' => $username,
                         'recorded_at' => $log->recorded_at,
                         'ip_address' => $log->ip_address,
@@ -77,10 +77,10 @@ class LicenseService
         $accessRecords = LicenseUserAccess::whereIn('license_id', $features->pluck('id'))
             ->with('license')
             ->get();
-        
-        $authorizedUsers = $accessRecords->groupBy(function($item) {
+
+        $authorizedUsers = $accessRecords->groupBy(function ($item) {
             return (string) $item->username;
-        })->map(function($records, $username) {
+        })->map(function ($records, $username) {
             return (object) [
                 'name' => (string) $username,
                 'username' => (string) $username,
@@ -94,7 +94,7 @@ class LicenseService
             ];
         })->values();
 
-        // Usage logs for these features
+        //  for these features
         $logs = LicenseLog::whereIn('license_id', $features->pluck('id'))
             ->with('license')
             ->orderBy('recorded_at', 'desc')
@@ -108,9 +108,10 @@ class LicenseService
                 } else {
                     $log->username = 'System';
                 }
-                
+
                 $log->timestamp = $log->recorded_at;
                 $log->license_name = $log->license?->license_name;
+                $log->company = $log->company ?? $log->license?->vendor?->company ?? $vendor->company ?? 'Pertamina';
                 return $log;
             });
 
@@ -255,10 +256,10 @@ class LicenseService
             'total_seats' => $license->total_seats,
             'data' => $metrics->map(fn($m) => [
                 'time_bucket' => $m->time_bucket,
-                'max_usage' => (int)$m->max_usage,
-                'avg_usage' => round((float)$m->avg_usage, 2),
+                'max_usage' => (int) $m->max_usage,
+                'avg_usage' => round((float) $m->avg_usage, 2),
                 'utilization' => $license->total_seats > 0
-                    ? round(((int)$m->max_usage / $license->total_seats) * 100, 2)
+                    ? round(((int) $m->max_usage / $license->total_seats) * 100, 2)
                     : 0
             ]),
         ];

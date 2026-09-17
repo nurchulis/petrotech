@@ -116,6 +116,14 @@
                             @enderror
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Company</label>
+                            <input type="text" class="form-control @error('company') is-invalid @enderror" name="company"
+                                placeholder="e.g. SLB (Schlumberger)">
+                            @error('company')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label required">Name Server (e.g. 2094@LLJOSAJ1)</label>
                             <input type="text" class="form-control @error('name_server') is-invalid @enderror"
                                 name="name_server" placeholder="e.g. 2094@LLJOSAJ1" required>
@@ -204,6 +212,7 @@
                     <tr>
                         <th class="w-1">No.</th>
                         <th>Vendor Name</th>
+                        <th>Company</th>
                         <th>Server</th>
                         <th class="text-center">Total Feature</th>
                         <th>Status (UP/DOWN)</th>
@@ -230,6 +239,9 @@
                                     @endif
                                     <strong class="text-primary">{{ $v->name }}</strong>
                                 </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-blue-lt text-blue">{{ $v->company ?? 'N/A' }}</span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -266,6 +278,7 @@
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-secondary btn-edit-vendor" data-bs-toggle="modal"
                                     data-bs-target="#editVendorModal" data-id="{{ $v->id }}" data-name="{{ $v->name }}"
+                                    data-company="{{ $v->company ?? '' }}"
                                     data-name-server="{{ $v->name_server ?? '' }}"
                                     data-server-id="{{ $v->license_server_id ?? '' }}" data-port="{{ $v->port ?? '' }}"
                                     data-status="{{ $v->status }}" data-description="{{ $v->description ?? '' }}"
@@ -327,6 +340,14 @@
                             <input type="text" class="form-control @error('name') is-invalid @enderror" name="name"
                                 id="edit_vendor_name" required>
                             @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Company</label>
+                            <input type="text" class="form-control @error('company') is-invalid @enderror" name="company"
+                                id="edit_vendor_company" placeholder="e.g. SLB (Schlumberger)">
+                            @error('company')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -395,6 +416,9 @@
                     }
                     const nameInput = document.getElementById('edit_vendor_name');
                     if (nameInput) nameInput.value = dataset.name || '';
+
+                    const companyInput = document.getElementById('edit_vendor_company');
+                    if (companyInput) companyInput.value = dataset.company || '';
 
                     const serverInput = document.getElementById('edit_name_server');
                     if (serverInput) serverInput.value = dataset.nameServer || '';
