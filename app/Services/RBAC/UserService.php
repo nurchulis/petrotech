@@ -15,9 +15,9 @@ class UserService
     {
         return User::with('roles')
             ->when($filters['search'] ?? null, fn($q, $s) => $q->where(function ($q) use ($s) {
-                $q->where('name', 'ilike', "%{$s}%")
-                  ->orWhere('email', 'ilike', "%{$s}%")
-                  ->orWhere('employee_id', 'ilike', "%{$s}%");
+                $q->where('name', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
+                  ->orWhere('employee_id', 'like', "%{$s}%");
             }))
             ->when($filters['role'] ?? null, fn($q, $r) => $q->role($r))
             ->when(isset($filters['status']) && $filters['status'] !== '', fn($q) => $q->where('is_active', $filters['status']))
