@@ -14,9 +14,9 @@ class VmManagementService
     {
         return Vm::with('assignedUser')
             ->when($filters['search'] ?? null, fn($q, $s) => $q->where(function ($q) use ($s) {
-                $q->where('vm_name', 'ilike', "%{$s}%")
-                  ->orWhere('application_name', 'ilike', "%{$s}%")
-                  ->orWhere('ip_address', 'ilike', "%{$s}%");
+                $q->where('vm_name', 'like', "%{$s}%")
+                  ->orWhere('application_name', 'like', "%{$s}%")
+                  ->orWhere('ip_address', 'like', "%{$s}%");
             }))
             ->when($filters['status'] ?? null, fn($q, $s) => $q->where('status', $s))
             ->when($filters['region'] ?? null, fn($q, $r) => $q->where('region', $r))

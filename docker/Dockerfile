@@ -4,23 +4,30 @@ FROM php:8.4-fpm
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    gnupg2 \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    libpq-dev \
     libzip-dev \
     libicu-dev \
+    unixodbc-dev \
     zip \
     unzip
 
+# Install Microsoft ODBC driver for SQL Server (msodbcsql18)
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+    && curl https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18
+
 # Clear cache
-RUN apt-get clean && rm -rf /var/lib/apz    t/lists/*
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd intl zip
+RUN docker-php-ext-install pdo mbstring exif pcntl bcmath gd intl zip
 
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Install Redis and SQL Server extensions
+RUN pecl install redis sqlsrv pdo_sqlsrv && docker-php-ext-enable redis sqlsrv pdo_sqlsrv
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

@@ -15,8 +15,8 @@ class TicketService
             ->when(!$user->hasRole(['admin', 'super_admin']), fn($q) => $q->forUser($user))
             ->when($filters['status'] ?? null, fn($q, $s) => $q->byStatus($s))
             ->when($filters['priority'] ?? null, fn($q, $p) => $q->where('priority', $p))
-            ->when($filters['search'] ?? null, fn($q, $s) => $q->where('title', 'ilike', "%{$s}%")
-                ->orWhere('ticket_number', 'ilike', "%{$s}%"));
+            ->when($filters['search'] ?? null, fn($q, $s) => $q->where('title', 'like', "%{$s}%")
+                ->orWhere('ticket_number', 'like', "%{$s}%"));
 
         return $query->latest()->paginate(15);
     }

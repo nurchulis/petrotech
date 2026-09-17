@@ -264,16 +264,11 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary btn-edit-vendor"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editVendorModal"
-                                    data-id="{{ $v->id }}"
-                                    data-name="{{ $v->name }}"
+                                <button class="btn btn-sm btn-outline-secondary btn-edit-vendor" data-bs-toggle="modal"
+                                    data-bs-target="#editVendorModal" data-id="{{ $v->id }}" data-name="{{ $v->name }}"
                                     data-name-server="{{ $v->name_server ?? '' }}"
-                                    data-server-id="{{ $v->license_server_id ?? '' }}"
-                                    data-port="{{ $v->port ?? '' }}"
-                                    data-status="{{ $v->status }}"
-                                    data-description="{{ $v->description ?? '' }}"
+                                    data-server-id="{{ $v->license_server_id ?? '' }}" data-port="{{ $v->port ?? '' }}"
+                                    data-status="{{ $v->status }}" data-description="{{ $v->description ?? '' }}"
                                     onclick="event.stopPropagation()">
                                     Edit
                                 </button>
@@ -376,7 +371,8 @@
                         @endif
                         <div class="mb-3">
                             <label class="form-label">Description (Optional)</label>
-                            <textarea class="form-control" name="description" id="edit_vendor_description" rows="2"></textarea>
+                            <textarea class="form-control" name="description" id="edit_vendor_description"
+                                rows="2"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -389,9 +385,9 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.btn-edit-vendor').forEach(function(button) {
-                button.addEventListener('click', function(e) {
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.btn-edit-vendor').forEach(function (button) {
+                button.addEventListener('click', function (e) {
                     const dataset = this.dataset;
                     const form = document.getElementById('editVendorForm');
                     if (form) {
@@ -399,19 +395,19 @@
                     }
                     const nameInput = document.getElementById('edit_vendor_name');
                     if (nameInput) nameInput.value = dataset.name || '';
-                    
+
                     const serverInput = document.getElementById('edit_name_server');
                     if (serverInput) serverInput.value = dataset.nameServer || '';
-                    
+
                     const serverIdInput = document.getElementById('edit_vendor_server');
                     if (serverIdInput) serverIdInput.value = dataset.serverId || '';
-                    
+
                     const portInput = document.getElementById('edit_vendor_port');
                     if (portInput) portInput.value = dataset.port || '';
-                    
+
                     const statusInput = document.getElementById('edit_vendor_status');
                     if (statusInput) statusInput.value = dataset.status || 'enable';
-                    
+
                     const descInput = document.getElementById('edit_vendor_description');
                     if (descInput) descInput.value = dataset.description || '';
                 });
@@ -440,7 +436,7 @@
                 var editModal = new bootstrap.Modal(document.getElementById('editVendorModal'));
                 editModal.show();
             @else
-                var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
+                            var createModal = new bootstrap.Modal(document.getElementById('createVendorModal'));
                 createModal.show();
             @endif
         @endif

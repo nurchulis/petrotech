@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('report_type', 100)->index();
             $table->string('title');
-            $table->jsonb('parameters')->nullable();
-            $table->jsonb('result_data')->nullable();
+            $table->json('parameters')->nullable();
+            $table->json('result_data')->nullable();
             $table->foreignId('generated_by')->constrained('users');
             $table->timestamp('generated_at');
             $table->timestamps();

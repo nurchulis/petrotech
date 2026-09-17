@@ -10,14 +10,16 @@ services:
       - ./docker/php.ini:/usr/local/etc/php/conf.d/custom.ini
     environment:
       - APP_ENV=production
-      - DB_HOST=postgres
-      - DB_PORT=5432
+      - DB_CONNECTION=sqlsrv
+      - DB_HOST=sqlserver
+      - DB_PORT=1433
       - DB_DATABASE=${DB_DATABASE:-petrotech}
-      - DB_USERNAME=${DB_USERNAME:-petrotech_user}
-      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - DB_USERNAME=${DB_USERNAME:-sa}
+      - DB_PASSWORD=${DB_PASSWORD:-SecretPassword123!}
+      - DB_TRUST_SERVER_CERTIFICATE=${DB_TRUST_SERVER_CERTIFICATE:-true}
       - REDIS_HOST=redis
     depends_on:
-      postgres:
+      sqlserver:
         condition: service_healthy
     networks:
       - petrotech
@@ -34,18 +36,18 @@ services:
     networks:
       - petrotech
 
-  postgres:
-    image: postgres:16-alpine
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
-      POSTGRES_DB: ${DB_DATABASE:-petrotech}
-      POSTGRES_USER: ${DB_USERNAME:-petrotech_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${DB_PASSWORD:-SecretPassword123!}"
+      MSSQL_PID: "Developer"
     ports:
-      - "5432:5432"
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-petrotech_user} -d ${DB_DATABASE:-petrotech}"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD:-SecretPassword123!}' -C -Q 'SELECT 1' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -62,7 +64,7 @@ services:
       - petrotech
 
 volumes:
-  postgres_data:
+  sqlserver_data:
   redis_data:
 
 networks:

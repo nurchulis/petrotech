@@ -15,7 +15,7 @@ class RoleService
     public function list(array $filters = []): LengthAwarePaginator
     {
         return Role::withCount(['users', 'permissions'])
-            ->when($filters['search'] ?? null, fn($q, $s) => $q->where('name', 'ilike', "%{$s}%"))
+            ->when($filters['search'] ?? null, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
             ->orderBy('name')
             ->paginate(15);
     }

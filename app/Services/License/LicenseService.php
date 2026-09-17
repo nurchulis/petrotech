@@ -14,9 +14,9 @@ class LicenseService
     {
         return License::with(['server', 'creator'])
             ->when($filters['status'] ?? null, fn($q, $s) => $q->where('status', $s))
-            ->when($filters['search'] ?? null, fn($q, $s) => $q->where('license_name', 'ilike', "%{$s}%")
-                ->orWhere('application_name', 'ilike', "%{$s}%")
-                ->orWhere('vendor', 'ilike', "%{$s}%"))
+            ->when($filters['search'] ?? null, fn($q, $s) => $q->where('license_name', 'like', "%{$s}%")
+                ->orWhere('application_name', 'like', "%{$s}%")
+                ->orWhere('vendor', 'like', "%{$s}%"))
             ->orderBy('expiry_date')
             ->paginate(15);
     }
@@ -26,7 +26,7 @@ class LicenseService
         return \App\Models\Vendor::with('server')
             ->withCount('licenses as features_count')
             ->when($filters['search'] ?? null, function ($q, $s) {
-                $q->where('name', 'ilike', "%{$s}%");
+                $q->where('name', 'like', "%{$s}%");
             })
             ->when($filters['status'] ?? null, function ($q, $s) {
                 $q->where('status', $s);
