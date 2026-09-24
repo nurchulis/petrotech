@@ -87,12 +87,12 @@ function rdpConnect(vmId, rdpUrl) {
         body: new FormData(form),
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     }).then(() => {
-        window.open(rdpUrl, '_blank');
+        window.open(rdpUrl, '_blank', 'noopener,noreferrer');
         btn.disabled = false;
-        btn.innerHTML = '🖥️ Connect RDP';
+        btn.textContent = '🖥️ Connect RDP';
     }).catch(() => {
         btn.disabled = false;
-        btn.innerHTML = '🖥️ Connect RDP';
+        btn.textContent = '🖥️ Connect RDP';
         alert('Connection failed. Please try again.');
     });
 }

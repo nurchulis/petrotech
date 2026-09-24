@@ -464,7 +464,12 @@ function startTerminal(){
         setTimeout(()=>{
             const div = document.createElement('div');
             div.className = 'term-line';
-            div.innerHTML = html;
+            // Parse HTML safely via DOMParser to prevent raw innerHTML assignment
+            const parser = new DOMParser();
+            const parsed = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+            while (parsed.body.firstChild.firstChild) {
+                div.appendChild(parsed.body.firstChild.firstChild);
+            }
             body.appendChild(div);
             body.scrollTop = body.scrollHeight;
         }, t);

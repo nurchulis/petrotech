@@ -7,10 +7,10 @@ from datetime import datetime
 
 # Setup directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOG_FILE = os.path.join(BASE_DIR, 'log', 'debug', 'debug.log')
+LOG_FILE = os.path.abspath(os.path.join(BASE_DIR, 'log', 'debug', 'debug.log'))
 
 # Load Config
-config_path = os.path.join(BASE_DIR, 'config.json')
+config_path = os.path.abspath(os.path.join(BASE_DIR, 'config.json'))
 with open(config_path, 'r') as f:
     config = json.load(f)
 

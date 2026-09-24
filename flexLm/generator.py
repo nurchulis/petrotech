@@ -1,21 +1,23 @@
 import json
 import time
-import random
+import secrets
 import os
 from datetime import datetime
 
-# Setup directories
+# Setup directories safely
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOG_DIR = os.path.join(BASE_DIR, 'log', 'debug')
+LOG_DIR = os.path.abspath(os.path.join(BASE_DIR, 'log', 'debug'))
 if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
+    os.makedirs(LOG_DIR, exist_ok=True)
 
-LOG_FILE = os.path.join(LOG_DIR, 'debug.log')
+LOG_FILE = os.path.abspath(os.path.join(LOG_DIR, 'debug.log'))
 
 # Load Config
-config_path = os.path.join(BASE_DIR, 'config.json')
+config_path = os.path.abspath(os.path.join(BASE_DIR, 'config.json'))
 with open(config_path, 'r') as f:
     config = json.load(f)
+
+rng = secrets.SystemRandom()
 
 # Internal state to track checkouts so we can simulate realistic checkins
 # Format: {vendor_name: {feature_name: [user_host_tuple, ...]}}
@@ -29,19 +31,19 @@ event_weights = ['OUT'] * 60 + ['IN'] * 30 + ['DENIED'] * 5 + ['LOST'] * 5
 
 def generate_log_line():
     now = datetime.now().strftime("%H:%M:%S")
-    vendor = random.choice(config['vendors'])
+    vendor = rng.choice(config['vendors'])
     vendor_name = vendor['vendor_name']
-    feature = random.choice(vendor['features'])
+    feature = rng.choice(vendor['features'])
     feat_name = feature['name']
     total_seats = feature['total_seats']
     
-    event = random.choice(event_weights)
+    event = rng.choice(event_weights)
     
     # If IN or LOST, we should ideally pick an active session if available
     current_sessions = active_sessions[vendor_name][feat_name]
     
     if event in ['IN', 'LOST'] and len(current_sessions) > 0:
-        user_host = random.choice(current_sessions)
+        user_host = rng.choice(current_sessions)
         current_sessions.remove(user_host)
         user, host = user_host
     else:
@@ -49,8 +51,8 @@ def generate_log_line():
         if event in ['IN', 'LOST']:
             event = 'OUT'
             
-        user = random.choice(vendor['users'])
-        host = random.choice(vendor['hosts'])
+        user = rng.choice(vendor['users'])
+        host = rng.choice(vendor['hosts'])
         
         if event == 'OUT':
             if len(current_sessions) < total_seats:
@@ -66,7 +68,7 @@ def generate_log_line():
             f'(Licensed number of users already reached. MAX={total_seats})',
             f'(User not on INCLUDE list)'
         ]
-        reason = random.choices(denied_reasons, weights=[70, 30])[0]
+        reason = rng.choices(denied_reasons, weights=[70, 30])[0]
         log_str = f'{now} ({vendor_name}) DENIED: "{feat_name}" {user}@{host}  {reason}'
     elif event == 'LOST':
         log_str = f'{now} ({vendor_name}) LOST: "{feat_name}" {user}@{host}  (connection lost, heartbeat timeout)'
@@ -92,4 +94,4 @@ while True:
     
     print(f"Generated: {log_line}")
     # Sleep randomly between 1 and 4 seconds
-    time.sleep(random.uniform(1.0, 4.0))
+    time.sleep(rng.uniform(1.0, 4.0))

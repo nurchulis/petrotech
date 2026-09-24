@@ -1728,10 +1728,10 @@
                             if (activeLink) activeTabId = activeLink.getAttribute('href');
                             
                             // Remember expanded collapse rows
-                            const expandedRows = Array.from(container.querySelectorAll('.collapse.show')).map(el => el.id).filter(id => id);
+                            const expandedRows = Array.from(container.querySelectorAll('.collapse.show')).map(el => el.id).filter(id => id && /^[a-zA-Z0-9_-]+$/.test(id));
 
                             // Pre-set active tab in new HTML to prevent visual jump
-                            if (activeTabId) {
+                            if (activeTabId && /^[a-zA-Z0-9_#-]+$/.test(activeTabId)) {
                                 // Remove current active classes in newContainer
                                 newContainer.querySelectorAll('.nav-tabs .nav-link').forEach(el => {
                                     el.classList.remove('active');
@@ -1739,19 +1739,20 @@
                                 });
                                 newContainer.querySelectorAll('.tab-content .tab-pane').forEach(el => el.classList.remove('active', 'show'));
                                 
-                                // Set desired active classes
-                                const targetLink = newContainer.querySelector(`.nav-tabs .nav-link[href="${activeTabId}"]`);
+                                // Set desired active classes using CSS.escape
+                                const safeTabId = CSS.escape(activeTabId);
+                                const targetLink = newContainer.querySelector(`.nav-tabs .nav-link[href="${safeTabId}"]`) || newContainer.querySelector(`.nav-tabs .nav-link[href="${activeTabId}"]`);
                                 if (targetLink) {
                                     targetLink.classList.add('active');
                                     targetLink.setAttribute('aria-selected', 'true');
                                 }
-                                const targetPane = newContainer.querySelector(`.tab-content .tab-pane${activeTabId}`);
+                                const targetPane = newContainer.querySelector(`#${CSS.escape(activeTabId.replace('#', ''))}`);
                                 if (targetPane) targetPane.classList.add('active', 'show');
                             }
                             
                             // Pre-set expanded rows in new HTML
                             expandedRows.forEach(id => {
-                                const targetRow = newContainer.querySelector(`#${id}`);
+                                const targetRow = newContainer.querySelector(`#${CSS.escape(id)}`);
                                 if (targetRow) {
                                     targetRow.classList.add('show');
                                 }

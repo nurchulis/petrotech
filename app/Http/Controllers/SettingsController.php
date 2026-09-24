@@ -33,14 +33,14 @@ class SettingsController extends Controller
     {
         $user = auth()->user();
 
-        $request->validate([
+        $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|max:255|unique:users,email,' . $user->id,
             'department'  => 'nullable|string|max:255',
             'phone'       => 'nullable|string|max:50',
         ]);
 
-        $user->update($request->only('name', 'email', 'department', 'phone'));
+        $user->update($validated);
 
         return back()->with('success', 'Profile updated successfully.');
     }
