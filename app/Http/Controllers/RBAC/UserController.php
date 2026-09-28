@@ -95,10 +95,14 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
     }
 
-    public function destroy(User $user): RedirectResponse
-    {
-        $this->authorize('delete', $user);
-        $this->service->delete($user);
-        return redirect()->route('admin.users.index')->with('success', 'User deleted.');
-    }
+    // ============================================================
+    // [DAST-SCAN] destroy() method temporarily disabled.
+    // Re-enable after DAST scanning is complete.
+    // ============================================================
+    // public function destroy(User $user): RedirectResponse
+    // {
+    //     $this->authorize('delete', $user);
+    //     $this->service->delete($user);
+    //     return redirect()->route('admin.users.index')->with('success', 'User deleted.');
+    // }
 }

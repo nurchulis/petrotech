@@ -81,7 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // Analytics & Reports
                 Route::get('/analytics', [AnalyticsController::class , 'index'])->name('analytics.index');
 
-                Route::resource('users', UserController::class);
+                // [DAST-SCAN] 'destroy' excluded temporarily. Re-enable after scan.
+                Route::resource('users', UserController::class)->except(['destroy']);
 
                 // VM Management (CRUD)
                 Route::resource('vm-management', VmManagementController::class)

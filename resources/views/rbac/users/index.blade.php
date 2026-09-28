@@ -79,12 +79,16 @@
                             @can('update', $user)
                             <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary">Edit</a>
                             @endcan
-                            @can('delete', $user)
-                            <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('Delete this user?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger">Delete</button>
-                            </form>
-                            @endcan
+                            {{-- ============================================================ --}}
+                            {{-- [DAST-SCAN] Delete button temporarily hidden.               --}}
+                            {{-- Re-enable after DAST scanning is complete.                  --}}
+                            {{-- ============================================================ --}}
+                            {{-- @can('delete', $user) --}}
+                            {{-- <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('Delete this user?')"> --}}
+                            {{--     @csrf @method('DELETE') --}}
+                            {{--     <button type="submit" class="btn btn-outline-danger">Delete</button> --}}
+                            {{-- </form> --}}
+                            {{-- @endcan --}}
                         </div>
                     </td>
                 </tr>
