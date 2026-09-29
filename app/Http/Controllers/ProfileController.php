@@ -24,37 +24,47 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
+    // ============================================================
+    // [DAST-SCAN] update() method temporarily disabled.
+    // DAST dapat mengubah email user via endpoint ini → login gagal.
+    // Re-enable after DAST scanning is complete.
+    // ============================================================
+    // public function update(ProfileUpdateRequest $request): RedirectResponse
+    // {
+    //     $request->user()->fill($request->validated());
+    //
+    //     if ($request->user()->isDirty('email')) {
+    //         $request->user()->email_verified_at = null;
+    //     }
+    //
+    //     $request->user()->save();
+    //
+    //     return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    // }
 
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
-    }
+    // ============================================================
+    // [DAST-SCAN] destroy() method temporarily disabled.
+    // DAST dapat menghapus akun user via endpoint ini.
+    // Re-enable after DAST scanning is complete.
+    // ============================================================
+    // public function destroy(Request $request): RedirectResponse
+    // {
+    //     $request->validateWithBag('userDeletion', [
+    //         'password' => ['required', 'current_password'],
+    //     ]);
+    //
+    //     $user = $request->user();
+    //
+    //     Auth::logout();
+    //
+    //     $user->delete();
+    //
+    //     $request->session()->invalidate();
+    //     $request->session()->regenerateToken();
+    //
+    //     return Redirect::to('/');
+    // }
 }
