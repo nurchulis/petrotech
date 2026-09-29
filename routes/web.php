@@ -81,8 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // Analytics & Reports
                 Route::get('/analytics', [AnalyticsController::class , 'index'])->name('analytics.index');
 
-                // [DAST-SCAN] 'destroy' excluded temporarily. Re-enable after scan.
-                Route::resource('users', UserController::class)->except(['destroy']);
+                // [DAST-SCAN] 'destroy' & 'update' excluded temporarily. Re-enable after scan.
+                Route::resource('users', UserController::class)->except(['destroy', 'update']);
 
                 // VM Management (CRUD)
                 Route::resource('vm-management', VmManagementController::class)
@@ -113,6 +113,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // ── Settings (all authenticated users) ───────────────────────────────
         Route::get('/settings', [SettingsController::class , 'index'])->name('settings.index');
-        Route::patch('/settings/profile', [SettingsController::class , 'updateProfile'])->name('settings.profile');
-        Route::put('/settings/password', [SettingsController::class , 'updatePassword'])->name('settings.password');
+        // [DAST-SCAN] updateProfile & updatePassword disabled — DAST bisa ubah email/password user.
+        // Re-enable setelah DAST scan selesai.
+        // Route::patch('/settings/profile', [SettingsController::class , 'updateProfile'])->name('settings.profile');
+        // Route::put('/settings/password', [SettingsController::class , 'updatePassword'])->name('settings.password');
     });

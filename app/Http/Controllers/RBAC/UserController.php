@@ -73,27 +73,32 @@ class UserController extends Controller
         return view('rbac.users.edit', compact('user', 'roles'));
     }
 
-    public function update(Request $request, User $user): RedirectResponse
-    {
-        $this->authorize('update', $user);
-
-        $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email,' . $user->id,
-            'password'    => 'nullable|string|min:8|confirmed',
-            'employee_id' => 'nullable|string|max:50|unique:users,employee_id,' . $user->id,
-            'department'  => 'nullable|string|max:100',
-            'phone'       => 'nullable|string|max:20',
-            'is_active'   => 'boolean',
-            'roles'       => 'required|array|min:1',
-            'roles.*'     => 'string|exists:roles,name',
-        ]);
-
-        $data['is_active'] = $request->boolean('is_active');
-        $this->service->update($user, $data);
-
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
-    }
+    // ============================================================
+    // [DAST-SCAN] update() method temporarily disabled.
+    // DAST dapat mengubah email/password user via endpoint ini.
+    // Re-enable after DAST scanning is complete.
+    // ============================================================
+    // public function update(Request $request, User $user): RedirectResponse
+    // {
+    //     $this->authorize('update', $user);
+    //
+    //     $data = $request->validate([
+    //         'name'        => 'required|string|max:255',
+    //         'email'       => 'required|email|unique:users,email,' . $user->id,
+    //         'password'    => 'nullable|string|min:8|confirmed',
+    //         'employee_id' => 'nullable|string|max:50|unique:users,employee_id,' . $user->id,
+    //         'department'  => 'nullable|string|max:100',
+    //         'phone'       => 'nullable|string|max:20',
+    //         'is_active'   => 'boolean',
+    //         'roles'       => 'required|array|min:1',
+    //         'roles.*'     => 'string|exists:roles,name',
+    //     ]);
+    //
+    //     $data['is_active'] = $request->boolean('is_active');
+    //     $this->service->update($user, $data);
+    //
+    //     return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
+    // }
 
     // ============================================================
     // [DAST-SCAN] destroy() method temporarily disabled.
