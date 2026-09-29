@@ -12,10 +12,11 @@
         <span class="badge bg-{{ $user->is_active ? 'success' : 'secondary' }} p-2">
             {{ $user->is_active ? 'Active' : 'Inactive' }}
         </span>
-        @can('update', $user)
-        <a href="{{ route('admin.vdi-access.user', $user) }}" class="btn btn-sm btn-outline-info">VM Access</a>
-        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-        @endcan
+        {{-- [DAST-SCAN] Edit & VM Access buttons hidden (update route excluded). Re-enable after scan. --}}
+        {{-- @can('update', $user) --}}
+        {{-- <a href="{{ route('admin.vdi-access.user', $user) }}" class="btn btn-sm btn-outline-info">VM Access</a> --}}
+        {{-- <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a> --}}
+        {{-- @endcan --}}
         <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">← Back</a>
     </div>
 </div>
