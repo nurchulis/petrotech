@@ -53,17 +53,19 @@
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
                             <a href="{{ route('admin.roles.show', $role) }}" class="btn btn-outline-secondary">View</a>
-                            @can('update', $role)
-                            <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-outline-primary">Edit</a>
-                            @endcan
-                            @can('delete', $role)
-                            @unless(in_array($role->name, ['user', 'admin', 'super_admin']))
-                            <form method="POST" action="{{ route('admin.roles.destroy', $role) }}" onsubmit="return confirm('Delete this role?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger">Delete</button>
-                            </form>
-                            @endunless
-                            @endcan
+                            {{-- [DAST-SCAN] Edit button hidden. Re-enable after scan. --}}
+                            {{-- @can('update', $role) --}}
+                            {{-- <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-outline-primary">Edit</a> --}}
+                            {{-- @endcan --}}
+                            {{-- [DAST-SCAN] Delete button hidden. Re-enable after scan. --}}
+                            {{-- @can('delete', $role) --}}
+                            {{-- @unless(in_array($role->name, ['user', 'admin', 'super_admin'])) --}}
+                            {{-- <form method="POST" action="{{ route('admin.roles.destroy', $role) }}" onsubmit="return confirm('Delete this role?')"> --}}
+                            {{--     @csrf @method('DELETE') --}}
+                            {{--     <button type="submit" class="btn btn-outline-danger">Delete</button> --}}
+                            {{-- </form> --}}
+                            {{-- @endunless --}}
+                            {{-- @endcan --}}
                         </div>
                     </td>
                 </tr>

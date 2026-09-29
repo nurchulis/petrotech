@@ -81,8 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // Analytics & Reports
                 Route::get('/analytics', [AnalyticsController::class , 'index'])->name('analytics.index');
 
-                // [DAST-SCAN] 'destroy' & 'update' excluded temporarily. Re-enable after scan.
-                Route::resource('users', UserController::class)->except(['destroy', 'update']);
+                // [DAST-SCAN] 'destroy', 'update', 'edit' excluded temporarily. Re-enable after scan.
+                Route::resource('users', UserController::class)->except(['destroy', 'update', 'edit']);
 
                 // VM Management (CRUD)
                 Route::resource('vm-management', VmManagementController::class)
@@ -107,7 +107,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // ── RBAC: Role Management (super_admin only) ─────────────────────────
             Route::middleware('role:super_admin')->prefix('admin')->name('admin.')->group(function () {
-            Route::resource('roles', RoleController::class);
+            // [DAST-SCAN] 'edit', 'update', 'destroy' excluded temporarily. Re-enable after scan.
+            Route::resource('roles', RoleController::class)->except(['edit', 'update', 'destroy']);
         }
         );
 

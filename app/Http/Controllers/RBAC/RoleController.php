@@ -58,40 +58,53 @@ class RoleController extends Controller
         return view('rbac.roles.show', compact('role'));
     }
 
-    public function edit(Role $role): View
-    {
-        $this->authorize('update', $role);
-        $role->load('permissions');
-        $permissions = Permission::orderBy('name')->get()
-            ->groupBy(fn($p) => explode('.', $p->name)[0] ?? 'general');
-        return view('rbac.roles.edit', compact('role', 'permissions'));
-    }
+    // ============================================================
+    // [DAST-SCAN] edit() method temporarily disabled.
+    // Re-enable after DAST scanning is complete.
+    // ============================================================
+    // public function edit(Role $role): View
+    // {
+    //     $this->authorize('update', $role);
+    //     $role->load('permissions');
+    //     $permissions = Permission::orderBy('name')->get()
+    //         ->groupBy(fn($p) => explode('.', $p->name)[0] ?? 'general');
+    //     return view('rbac.roles.edit', compact('role', 'permissions'));
+    // }
 
-    public function update(Request $request, Role $role): RedirectResponse
-    {
-        $this->authorize('update', $role);
+    // ============================================================
+    // [DAST-SCAN] update() method temporarily disabled.
+    // DAST dapat mengubah permissions role via endpoint ini.
+    // Re-enable after DAST scanning is complete.
+    // ============================================================
+    // public function update(Request $request, Role $role): RedirectResponse
+    // {
+    //     $this->authorize('update', $role);
+    //
+    //     $data = $request->validate([
+    //         'name'          => 'required|string|max:50|unique:roles,name,' . $role->id,
+    //         'display_name'  => 'nullable|string|max:100',
+    //         'description'   => 'nullable|string|max:255',
+    //         'permissions'   => 'nullable|array',
+    //         'permissions.*' => 'string|exists:permissions,name',
+    //     ]);
+    //
+    //     $this->service->update($role, $data);
+    //     return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
+    // }
 
-        $data = $request->validate([
-            'name'          => 'required|string|max:50|unique:roles,name,' . $role->id,
-            'display_name'  => 'nullable|string|max:100',
-            'description'   => 'nullable|string|max:255',
-            'permissions'   => 'nullable|array',
-            'permissions.*' => 'string|exists:permissions,name',
-        ]);
-
-        $this->service->update($role, $data);
-        return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
-    }
-
-    public function destroy(Role $role): RedirectResponse
-    {
-        $this->authorize('delete', $role);
-
-        try {
-            $this->service->delete($role);
-            return redirect()->route('admin.roles.index')->with('success', 'Role deleted.');
-        } catch (\RuntimeException $e) {
-            return redirect()->route('admin.roles.index')->with('error', $e->getMessage());
-        }
-    }
+    // ============================================================
+    // [DAST-SCAN] destroy() method temporarily disabled.
+    // Re-enable after DAST scanning is complete.
+    // ============================================================
+    // public function destroy(Role $role): RedirectResponse
+    // {
+    //     $this->authorize('delete', $role);
+    //
+    //     try {
+    //         $this->service->delete($role);
+    //         return redirect()->route('admin.roles.index')->with('success', 'Role deleted.');
+    //     } catch (\RuntimeException $e) {
+    //         return redirect()->route('admin.roles.index')->with('error', $e->getMessage());
+    //     }
+    // }
 }

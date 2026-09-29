@@ -76,9 +76,10 @@
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
                             <a href="{{ route('admin.users.show', $user) }}" class="btn btn-outline-secondary">View</a>
-                            @can('update', $user)
-                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary">Edit</a>
-                            @endcan
+                            {{-- [DAST-SCAN] Edit button hidden (route excluded). Re-enable after scan. --}}
+                            {{-- @can('update', $user) --}}
+                            {{-- <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary">Edit</a> --}}
+                            {{-- @endcan --}}
                             {{-- ============================================================ --}}
                             {{-- [DAST-SCAN] Delete button temporarily hidden.               --}}
                             {{-- Re-enable after DAST scanning is complete.                  --}}
