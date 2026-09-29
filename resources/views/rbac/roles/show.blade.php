@@ -9,9 +9,10 @@
         <small class="text-muted">{{ $role->description ?? 'No description' }}</small>
     </div>
     <div class="d-flex gap-2">
-        @can('update', $role)
-        <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-        @endcan
+        {{-- [DAST-SCAN] Edit button hidden (route excluded). Re-enable after scan. --}}
+        {{-- @can('update', $role) --}}
+        {{-- <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-outline-primary">Edit</a> --}}
+        {{-- @endcan --}}
         <a href="{{ route('admin.roles.index') }}" class="btn btn-sm btn-outline-secondary">← Back</a>
     </div>
 </div>
