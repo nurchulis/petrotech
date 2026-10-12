@@ -52,6 +52,7 @@
                 <div class="d-flex gap-2">
                                     @if($vm->status === 'running')
                         <form id="cf-{{ $vm->id }}" method="POST" action="{{ route('vdi.connect', $vm) }}" style="display:none">@csrf</form>
+                        {{-- SAST False Positive Note (CWE-522): "Connect RDP" is a UI button label, not an RDP password or credential --}}
                         <button type="button" id="cb-{{ $vm->id }}"
                             class="btn btn-sm" style="background:#1a3c6b;color:#fff"
                             onclick="rdpConnect({{ $vm->id }}, '{{ route('vdi.rdp', $vm) }}')"

@@ -54,6 +54,7 @@ class LicenseService
                     } elseif (preg_match("/'([^']+)'/", $log->event_detail, $matches)) {
                         $username = $matches[1];
                     } else {
+                        // SAST False Positive Note (CWE-522): Display fallback label for unparsed logs, not a credential/secret
                         $username = 'Unknown';
                     }
 
@@ -106,6 +107,7 @@ class LicenseService
                 } elseif (preg_match("/'([^']+)'/", $log->event_detail, $matches)) {
                     $log->username = $matches[1];
                 } else {
+                    // SAST False Positive Note (CWE-522): Audit trail actor label for system-generated logs, not a credential
                     $log->username = 'System';
                 }
 
