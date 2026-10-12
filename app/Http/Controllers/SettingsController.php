@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -34,10 +35,10 @@ class SettingsController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|max:255|unique:users,email,' . $user->id,
-            'department'  => 'nullable|string|max:255',
-            'phone'       => 'nullable|string|max:50',
+            'name'        => ['required', 'string', 'max:255'],
+            'email'       => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'department'  => ['nullable', 'string', 'max:255'],
+            'phone'       => ['nullable', 'string', 'max:50'],
         ]);
 
         $user->update($validated);

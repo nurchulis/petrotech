@@ -36,6 +36,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at'     => 'datetime',
+            // SAST False Positive Note (CWE-522): Attribute casting definition only, not a hardcoded password
             'password'          => 'hashed',
             'is_active'         => 'boolean',
         ];
