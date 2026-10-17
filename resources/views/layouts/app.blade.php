@@ -163,9 +163,7 @@
                             </a>
                         </li>
 
-                        @role(['admin', 'super_admin'])
-                        <li class="nav-item"><span class="nav-section-title">Administration</span></li>
-
+                        @if(auth()->user()->hasRole(['admin', 'super_admin']) || auth()->user()->accessibleVendors()->exists())
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}"
                                 href="{{ route('admin.licenses.index') }}">
@@ -179,6 +177,10 @@
                                 <span class="nav-link-title">License Management</span>
                             </a>
                         </li>
+                        @endif
+
+                        @role(['admin', 'super_admin'])
+                        <li class="nav-item"><span class="nav-section-title">Administration</span></li>
 
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.vm-monitoring.*') ? 'active' : '' }}"

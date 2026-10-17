@@ -47,22 +47,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         );
 
-        // ── Admin-only routes ─────────────────────────────────────────────────
-        Route::middleware('role:admin|super_admin')->prefix('admin')->name('admin.')->group(function () {
-
-            // License Management
+        // ── License Management (Admin, Super Admin, or Users with assigned License/Vendor access) ──
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('/licenses', [LicenseController::class, 'index'])->name('licenses.index');
             Route::get('/licenses/vendor/{vendor}', [LicenseController::class, 'vendorShow'])->name('licenses.vendor');
+            Route::get('/licenses/{license}/usage-metrics', [LicenseController::class, 'getUsageMetrics'])->name('licenses.usage_metrics');
+            Route::post('/licenses/logs/export', [LicenseController::class, 'exportLogs'])->name('licenses.logs.export');
             Route::post('/licenses/access/grant', [LicenseController::class, 'grantAccess'])->name('licenses.access.grant');
             Route::post('/licenses/access/revoke', [LicenseController::class, 'revokeAccess'])->name('licenses.access.revoke');
             Route::post('/licenses/access/revoke-all', [LicenseController::class, 'revokeAllAccess'])->name('licenses.access.revoke_all');
-            Route::post('/licenses/logs/export', [LicenseController::class, 'exportLogs'])->name('licenses.logs.export');
             Route::post('/licenses/kick', [LicenseController::class, 'kickUser'])->name('licenses.kick');
+            Route::get('/licenses/{license}', [LicenseController::class, 'show'])->name('licenses.show');
+        });
+
+        // ── Admin-only routes ─────────────────────────────────────────────────
+        Route::middleware('role:admin|super_admin')->prefix('admin')->name('admin.')->group(function () {
+
+            // Vendor & License Management CRUD (Admin only)
             Route::post('/vendors', [\App\Http\Controllers\Admin\VendorController::class, 'store'])->name('vendors.store');
             Route::put('/vendors/{vendor}', [\App\Http\Controllers\Admin\VendorController::class, 'update'])->name('vendors.update');
-            Route::resource('licenses', LicenseController::class);
-
+            Route::get('/licenses/create', [LicenseController::class, 'create'])->name('licenses.create');
+            Route::post('/licenses', [LicenseController::class, 'store'])->name('licenses.store');
+            Route::get('/licenses/{license}/edit', [LicenseController::class, 'edit'])->name('licenses.edit');
+            Route::put('/licenses/{license}', [LicenseController::class, 'update'])->name('licenses.update');
+            Route::delete('/licenses/{license}', [LicenseController::class, 'destroy'])->name('licenses.destroy');
             Route::post('/licenses/{license}/toggle', [LicenseController::class, 'toggle'])->name('licenses.toggle');
-            Route::get('/licenses/{license}/usage-metrics', [LicenseController::class, 'getUsageMetrics'])->name('licenses.usage_metrics');
 
             // VM Monitoring
             Route::prefix('vm-monitoring')->name('vm-monitoring.')->group(function () {
@@ -81,8 +90,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // Analytics & Reports
                 Route::get('/analytics', [AnalyticsController::class , 'index'])->name('analytics.index');
 
-                // [DAST-SCAN] 'destroy', 'update', 'edit' excluded temporarily. Re-enable after scan.
-                Route::resource('users', UserController::class)->except(['destroy', 'update', 'edit']);
+                // User Management (edit & update re-enabled for role 'user')
+                Route::resource('users', UserController::class)->except(['destroy']);
 
                 // VM Management (CRUD)
                 Route::resource('vm-management', VmManagementController::class)
@@ -102,6 +111,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // VDI Access Management
                 Route::get('vdi-access/users/{user}', [VdiAccessController::class, 'userAccess'])->name('vdi-access.user');
                 Route::post('vdi-access/users/{user}', [VdiAccessController::class, 'syncUserAccess'])->name('vdi-access.user.sync');
+
+                // License Access Management
+                Route::get('license-access/users/{user}', [UserController::class, 'licenseAccess'])->name('license-access.user');
+                Route::post('license-access/users/{user}', [UserController::class, 'syncLicenseAccess'])->name('license-access.user.sync');
             }
             );
 

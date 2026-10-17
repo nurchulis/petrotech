@@ -12,11 +12,10 @@
         <span class="badge bg-{{ $user->is_active ? 'success' : 'secondary' }} p-2">
             {{ $user->is_active ? 'Active' : 'Inactive' }}
         </span>
-        {{-- [DAST-SCAN] Edit & VM Access buttons hidden (update route excluded). Re-enable after scan. --}}
-        {{-- @can('update', $user) --}}
-        {{-- <a href="{{ route('admin.vdi-access.user', $user) }}" class="btn btn-sm btn-outline-info">VM Access</a> --}}
-        {{-- <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a> --}}
-        {{-- @endcan --}}
+        @can('update', $user)
+        <a href="{{ route('admin.vdi-access.user', $user) }}" class="btn btn-sm btn-outline-info">VM Access</a>
+        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+        @endcan
         <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">← Back</a>
     </div>
 </div>
@@ -40,6 +39,16 @@
                     <tr>
                         <td class="text-muted" style="width:40%">Employee ID</td>
                         <td>{{ $user->employee_id ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Company</td>
+                        <td>
+                            @if($user->company)
+                                <span class="badge bg-blue-lt text-blue fw-bold">{{ $user->company }}</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                     </tr>
                     <tr>
                         <td class="text-muted">Department</td>
@@ -83,6 +92,58 @@
                 @empty
                 <p class="text-muted mb-0">No roles assigned.</p>
                 @endforelse
+            </div>
+        </div>
+    </div>
+
+    {{-- License Management Access --}}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0">License Management Access</h4>
+                    <small class="text-muted">Permitted vendor licenses accessible by {{ $user->name }} at <code>admin/licenses</code></small>
+                </div>
+                <a href="{{ route('admin.license-access.user', $user) }}" class="btn btn-sm btn-outline-primary">Manage License Access</a>
+            </div>
+            <div class="card-body">
+                @if($user->hasRole(['admin', 'super_admin']))
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        This user holds an <strong>Administrator</strong> role, granting unrestricted access to all vendor licenses on the platform.
+                    </div>
+                @else
+                    @if($user->accessibleVendors->isNotEmpty())
+                        <div class="row g-3">
+                            @foreach($user->accessibleVendors as $v)
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card border border-primary-subtle shadow-none h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="card-title text-primary mb-0 fw-bold">{{ $v->name }}</h5>
+                                            <span class="badge bg-{{ $v->status == 'enable' ? 'success' : 'danger' }}-lt">
+                                                {{ strtoupper($v->status) }}
+                                            </span>
+                                        </div>
+                                        <div class="text-muted small mb-1">Company: <strong>{{ $v->company ?? 'N/A' }}</strong></div>
+                                        <div class="text-muted small mb-2">Features: <strong>{{ $v->licenses->count() }} registered</strong></div>
+                                        <a href="{{ route('admin.licenses.vendor', $v->id) }}" class="btn btn-sm btn-outline-primary w-100">
+                                            View in License Management →
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4 text-muted">
+                            <p class="mb-2">No vendor licenses assigned to this user yet.</p>
+                            <a href="{{ route('admin.license-access.user', $user) }}" class="btn btn-sm btn-primary">
+                                + Assign License Access
+                            </a>
+                        </div>
+                    @endif
+                @endif
             </div>
         </div>
     </div>

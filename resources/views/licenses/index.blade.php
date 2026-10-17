@@ -27,8 +27,13 @@
     </div>
 
     @php
-        // Fetch all vendors to calculate stats
-        $allVendors = \App\Models\Vendor::with('server')->get();
+        // Fetch vendors accessible to this user to calculate stats
+        $user = auth()->user();
+        $allVendorsQuery = \App\Models\Vendor::with('server');
+        if ($user && !$user->hasRole(['admin', 'super_admin'])) {
+            $allVendorsQuery->whereIn('id', $user->accessibleVendors()->pluck('vendors.id'));
+        }
+        $allVendors = $allVendorsQuery->get();
         $totalVendors = $allVendors->count();
 
         // Reverting: UP = status 'enable', DOWN = status 'disable'

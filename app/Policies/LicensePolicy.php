@@ -9,12 +9,16 @@ class LicensePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->hasRole(['admin', 'super_admin']) || $user->accessibleVendors()->exists();
     }
 
     public function view(User $user, License $license): bool
     {
-        return $user->hasRole(['admin', 'super_admin']);
+        if ($user->hasRole(['admin', 'super_admin'])) {
+            return true;
+        }
+
+        return $user->canAccessVendor($license->vendor_id);
     }
 
     public function create(User $user): bool

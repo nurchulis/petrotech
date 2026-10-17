@@ -50,6 +50,19 @@
                             @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label fw-semibold">Company</label>
+                            <input type="text" name="company"
+                                class="form-control @error('company') is-invalid @enderror"
+                                value="{{ old('company') }}" placeholder="e.g. Pertamina EP, PHE, Patra Niaga"
+                                list="company_list">
+                            <datalist id="company_list">
+                                @foreach($existingCompanies ?? [] as $c)
+                                    <option value="{{ $c }}">
+                                @endforeach
+                            </datalist>
+                            @error('company')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Phone</label>
                             <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
                                 value="{{ old('phone') }}">
@@ -80,6 +93,37 @@
                                     </label>
                                 </div>
                                 @endforeach
+                            </div>
+                        </div>
+
+                        {{-- License Management Access Assignment --}}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">License Management Access (Assigned Vendors)</label>
+                            <small class="text-muted d-block mb-2">Assign which vendor licenses this user is allowed to view and manage in License Management.</small>
+                            <div class="row g-2">
+                                @forelse($vendors ?? [] as $v)
+                                <div class="col-md-6">
+                                    <div class="border rounded p-2 d-flex align-items-center justify-content-between">
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" name="vendor_ids[]"
+                                                value="{{ $v->id }}" id="vendor_{{ $v->id }}"
+                                                {{ in_array($v->id, old('vendor_ids', [])) ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold text-dark cursor-pointer" for="vendor_{{ $v->id }}">
+                                                {{ $v->name }}
+                                                @if($v->company)
+                                                    <span class="badge bg-blue-lt text-blue ms-1">{{ $v->company }}</span>
+                                                @endif
+                                            </label>
+                                            <div class="small text-muted">{{ $v->licenses_count ?? 0 }} features • Server: {{ $v->server->server_name ?? 'N/A' }}</div>
+                                        </div>
+                                        <span class="badge bg-{{ $v->status == 'enable' ? 'success' : 'danger' }}-lt">
+                                            {{ strtoupper($v->status) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                @empty
+                                <div class="col-12 text-muted small">No vendors found to assign.</div>
+                                @endforelse
                             </div>
                         </div>
 

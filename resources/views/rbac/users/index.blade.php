@@ -43,8 +43,10 @@
                 <tr>
                     <th>User</th>
                     <th>Employee ID</th>
+                    <th>Company</th>
                     <th>Department</th>
                     <th>Roles</th>
+                    <th>License Access</th>
                     <th>Status</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -62,11 +64,29 @@
                         </div>
                     </td>
                     <td>{{ $user->employee_id ?? '—' }}</td>
+                    <td>
+                        @if($user->company)
+                            <span class="badge bg-blue-lt text-blue">{{ $user->company }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
                     <td>{{ $user->department ?? '—' }}</td>
                     <td>
                         @foreach($user->roles as $role)
                         <span class="badge bg-primary-lt text-primary">{{ $role->display_name ?? ucfirst($role->name) }}</span>
                         @endforeach
+                    </td>
+                    <td>
+                        @if($user->hasRole(['admin', 'super_admin']))
+                            <span class="badge bg-green-lt text-success">All (Admin)</span>
+                        @elseif($user->accessibleVendors->isNotEmpty())
+                            @foreach($user->accessibleVendors as $av)
+                                <span class="badge bg-cyan-lt text-cyan mb-1">{{ $av->name }}</span>
+                            @endforeach
+                        @else
+                            <span class="text-muted small">No Access</span>
+                        @endif
                     </td>
                     <td>
                         <span class="badge bg-{{ $user->is_active ? 'success' : 'secondary' }}-lt text-{{ $user->is_active ? 'success' : 'secondary' }}">
@@ -76,10 +96,10 @@
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
                             <a href="{{ route('admin.users.show', $user) }}" class="btn btn-outline-secondary">View</a>
-                            {{-- [DAST-SCAN] Edit button hidden (route excluded). Re-enable after scan. --}}
-                            {{-- @can('update', $user) --}}
-                            {{-- <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary">Edit</a> --}}
-                            {{-- @endcan --}}
+                            <a href="{{ route('admin.license-access.user', $user) }}" class="btn btn-outline-info" title="Manage License Access">Licenses</a>
+                            @can('update', $user)
+                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary">Edit</a>
+                            @endcan
                             {{-- ============================================================ --}}
                             {{-- [DAST-SCAN] Delete button temporarily hidden.               --}}
                             {{-- Re-enable after DAST scanning is complete.                  --}}
@@ -94,7 +114,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center text-muted py-4">No users found.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-4">No users found.</td></tr>
                 @endforelse
             </tbody>
         </table>

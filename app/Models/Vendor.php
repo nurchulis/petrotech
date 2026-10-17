@@ -21,4 +21,11 @@ class Vendor extends Model
     {
         return $this->belongsTo(LicenseServer::class, 'license_server_id');
     }
+
+    public function allowedUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_vendor_access')
+                    ->withPivot('granted_by')
+                    ->withTimestamps();
+    }
 }

@@ -25,8 +25,9 @@ class LicenseController extends Controller
         ]);
 
         $filters = $request->only(['search']);
-        $vendors = $this->service->listVendors($filters);
-        $expiring = $this->service->expiringWithinDays(30);
+        $user = auth()->user();
+        $vendors = $this->service->listVendors($filters, $user);
+        $expiring = $this->service->expiringWithinDays(30, $user);
 
         return view('licenses.index', compact('vendors', 'expiring'));
     }
@@ -37,6 +38,12 @@ class LicenseController extends Controller
             abort(404);
         }
         $this->authorize('viewAny', License::class);
+
+        $user = auth()->user();
+        if (!$user->canAccessVendor($vendorId)) {
+            abort(403, 'You do not have permission to access licenses for this vendor.');
+        }
+
         $data = $this->service->getVendorDetails($vendorId);
 
         return view('licenses.vendor_show', $data);
@@ -53,6 +60,10 @@ class LicenseController extends Controller
             'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
             'status' => 'required|in:enable,disable',
         ]);
+
+        if (!auth()->user()->canAccessVendor($data['vendor_id'])) {
+            abort(403, 'You do not have permission to manage access for this vendor.');
+        }
 
         // Get all candidate license IDs for this vendor to scope the sync
         $scopeLicenseIds = License::where('license_server_id', $data['server_id'])
@@ -88,6 +99,10 @@ class LicenseController extends Controller
             'server_id' => 'required|integer|min:1|max:2147483647|exists:license_servers,id',
             'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
         ]);
+
+        if (!auth()->user()->canAccessVendor($data['vendor_id'])) {
+            abort(403, 'You do not have permission to manage access for this vendor.');
+        }
 
         $scopeLicenseIds = License::where('license_server_id', $data['server_id'])
             ->where('vendor_id', $data['vendor_id'])
@@ -221,6 +236,10 @@ class LicenseController extends Controller
         $data = $request->validate([
             'vendor_id' => 'required|integer|min:1|max:2147483647|exists:vendors,id',
         ]);
+
+        if (!auth()->user()->canAccessVendor($data['vendor_id'])) {
+            abort(403, 'You do not have permission to export logs for this vendor.');
+        }
 
         $vendorDetails = $this->service->getVendorDetails($data['vendor_id']);
         $logs = $vendorDetails['logs'] ?? collect();

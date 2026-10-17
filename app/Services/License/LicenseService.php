@@ -21,10 +21,13 @@ class LicenseService
             ->paginate(15);
     }
 
-    public function listVendors(array $filters = []): LengthAwarePaginator
+    public function listVendors(array $filters = [], ?User $user = null): LengthAwarePaginator
     {
         return \App\Models\Vendor::with('server')
             ->withCount('licenses as features_count')
+            ->when($user && !$user->hasRole(['admin', 'super_admin']), function ($q) use ($user) {
+                $q->whereIn('vendors.id', $user->accessibleVendors()->pluck('vendors.id'));
+            })
             ->when($filters['search'] ?? null, function ($q, $s) {
                 $q->where('name', 'like', "%{$s}%");
             })
@@ -267,8 +270,14 @@ class LicenseService
         ];
     }
 
-    public function expiringWithinDays(int $days = 30): \Illuminate\Database\Eloquent\Collection
+    public function expiringWithinDays(int $days = 30, ?User $user = null): \Illuminate\Database\Eloquent\Collection
     {
-        return License::expiringSoon($days)->active()->with('server')->get();
+        return License::expiringSoon($days)
+            ->active()
+            ->when($user && !$user->hasRole(['admin', 'super_admin']), function ($q) use ($user) {
+                $q->whereIn('vendor_id', $user->accessibleVendors()->pluck('vendors.id'));
+            })
+            ->with('server')
+            ->get();
     }
 }

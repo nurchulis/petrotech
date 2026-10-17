@@ -21,6 +21,7 @@ class User extends Authenticatable
         'password',
         'employee_id',
         'department',
+        'company',
         'phone',
         'avatar',
         'is_active',
@@ -84,6 +85,23 @@ class User extends Authenticatable
     public function ticketComments(): HasMany
     {
         return $this->hasMany(TicketComment::class);
+    }
+
+    public function accessibleVendors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Vendor::class, 'user_vendor_access')
+                    ->withPivot('granted_by')
+                    ->withTimestamps();
+    }
+
+    public function canAccessVendor(int|Vendor $vendor): bool
+    {
+        if ($this->hasRole(['admin', 'super_admin'])) {
+            return true;
+        }
+
+        $vendorId = $vendor instanceof Vendor ? $vendor->id : $vendor;
+        return $this->accessibleVendors()->where('vendors.id', $vendorId)->exists();
     }
 
     public function accessibleLicenses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
