@@ -76,11 +76,11 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        if ($user->hasRole(['admin', 'super_admin'])) {
-            abort(403, 'Administrator and Super Administrator accounts cannot be edited.');
+        if ($user->hasRole('super_admin') || auth()->id() === $user->id) {
+            abort(403, 'Super Administrator and self accounts cannot be edited.');
         }
 
-        $roles = Role::where('name', 'user')->get();
+        $roles = Role::whereIn('name', ['admin', 'user'])->get();
         $vendors = \App\Models\Vendor::withCount('licenses')->with('server')->orderBy('name')->get();
         $existingCompanies = \App\Models\Vendor::whereNotNull('company')->distinct()->pluck('company');
         $user->load('accessibleVendors');
@@ -91,8 +91,8 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        if ($user->hasRole(['admin', 'super_admin'])) {
-            abort(403, 'Administrator and Super Administrator accounts cannot be edited.');
+        if ($user->hasRole('super_admin') || auth()->id() === $user->id) {
+            abort(403, 'Super Administrator and self accounts cannot be edited.');
         }
 
         $data = $request->validate([
@@ -104,14 +104,13 @@ class UserController extends Controller
             'company'      => 'nullable|string|max:255',
             'phone'        => 'nullable|string|max:20',
             'is_active'    => 'boolean',
-            'roles'        => 'nullable|array',
-            'roles.*'      => 'string|in:user',
+            'roles'        => 'required|array|min:1',
+            'roles.*'      => 'string|in:admin,user',
             'vendor_ids'   => 'nullable|array',
             'vendor_ids.*' => 'integer|exists:vendors,id',
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
-        $data['roles'] = ['user']; // Guarantee that role cannot be changed to admin or super_admin
         $this->service->update($user, $data);
 
         return redirect()->route('admin.users.index')->with('success', "User '{$user->name}' updated successfully.");

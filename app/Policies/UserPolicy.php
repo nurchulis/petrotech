@@ -31,17 +31,24 @@ class UserPolicy
     }
 
     /**
-     * Admin and super_admin can update users, but CANNOT update admin or super_admin accounts.
-     * Only users with role 'user' can be edited.
+     * Only super_admin can update users.
+     * Cannot edit themselves, and cannot edit another super_admin.
+     * Only roles below super_admin (admin and user) can be edited.
      */
     public function update(User $user, User $model): bool
     {
-        if (!$user->hasRole(['admin', 'super_admin'])) {
+        // Only super_admin can edit
+        if (!$user->hasRole('super_admin')) {
             return false;
         }
 
-        // Prevent editing admin and super_admin accounts
-        return !$model->hasRole(['admin', 'super_admin']);
+        // Cannot edit themselves
+        if ($user->id === $model->id) {
+            return false;
+        }
+
+        // Cannot edit another super_admin (only admin and user accounts)
+        return !$model->hasRole('super_admin');
     }
 
     /**

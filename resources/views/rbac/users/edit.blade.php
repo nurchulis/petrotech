@@ -74,16 +74,23 @@
                     </div>
                 </div>
 
-                {{-- Role Assignment (Locked to User) --}}
+                {{-- Role Assignment (Admin and User only) --}}
                 <div class="col-12">
-                    <label class="form-label fw-semibold">Role</label>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-primary-lt text-primary p-2 fs-6">
-                            <i class="fas fa-user me-1"></i> User
-                        </span>
-                        <input type="hidden" name="roles[]" value="user">
-                        <small class="text-muted ms-2">Standard user role. Administrator and Super Administrator roles cannot be edited or assigned.</small>
+                    <label class="form-label fw-semibold">Assign Roles *</label>
+                    @error('roles')<div class="text-danger small mb-1">{{ $message }}</div>@enderror
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach($roles as $role)
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="roles[]" value="{{ $role->name }}"
+                                   id="role_{{ $role->id }}"
+                                   {{ in_array($role->name, old('roles', $user->getRoleNames()->toArray())) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="role_{{ $role->id }}">
+                                {{ $role->display_name ?? ucfirst($role->name) }}
+                            </label>
+                        </div>
+                        @endforeach
                     </div>
+                    <small class="text-muted">Super Administrator role cannot be assigned or edited.</small>
                 </div>
 
                 {{-- License Management Access Assignment --}}
