@@ -24,7 +24,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
                 $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
-                $table->foreignId('granted_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->foreignId('granted_by')->nullable()->constrained('users')->onDelete('no action');
                 $table->timestamps();
 
                 $table->unique(['user_id', 'vendor_id']);
