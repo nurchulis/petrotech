@@ -163,7 +163,8 @@
                             </a>
                         </li>
 
-                        @if(auth()->user()->hasRole(['admin', 'super_admin']) || auth()->user()->accessibleVendors()->exists())
+                        {{-- License Management for regular Users under Operations --}}
+                        @if(!auth()->user()->hasRole(['admin', 'super_admin']) && auth()->user()->canAccessLicenses())
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}"
                                 href="{{ route('admin.licenses.index') }}">
@@ -181,6 +182,20 @@
 
                         @role(['admin', 'super_admin'])
                         <li class="nav-item"><span class="nav-section-title">Administration</span></li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}"
+                                href="{{ route('admin.licenses.index') }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="1" y="3" width="15" height="13" rx="1" />
+                                        <path d="M16 8h5a1 1 0 011 1v9a1 1 0 01-1 1H10a1 1 0 01-1-1v-4" />
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title">License Management</span>
+                            </a>
+                        </li>
 
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.vm-monitoring.*') ? 'active' : '' }}"

@@ -31,7 +31,13 @@
         $user = auth()->user();
         $allVendorsQuery = \App\Models\Vendor::with('server');
         if ($user && !$user->hasRole(['admin', 'super_admin'])) {
-            $allVendorsQuery->whereIn('id', $user->accessibleVendors()->pluck('vendors.id'));
+            $assignedIds = $user->accessibleVendors()->pluck('vendors.id')->toArray();
+            $allVendorsQuery->where(function ($sub) use ($user, $assignedIds) {
+                $sub->whereIn('id', $assignedIds);
+                if (!empty($user->company)) {
+                    $sub->orWhere('company', $user->company);
+                }
+            });
         }
         $allVendors = $allVendorsQuery->get();
         $totalVendors = $allVendors->count();

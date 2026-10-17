@@ -26,7 +26,13 @@ class LicenseService
         return \App\Models\Vendor::with('server')
             ->withCount('licenses as features_count')
             ->when($user && !$user->hasRole(['admin', 'super_admin']), function ($q) use ($user) {
-                $q->whereIn('vendors.id', $user->accessibleVendors()->pluck('vendors.id'));
+                $assignedIds = $user->accessibleVendors()->pluck('vendors.id')->toArray();
+                $q->where(function ($sub) use ($user, $assignedIds) {
+                    $sub->whereIn('vendors.id', $assignedIds);
+                    if (!empty($user->company)) {
+                        $sub->orWhere('vendors.company', $user->company);
+                    }
+                });
             })
             ->when($filters['search'] ?? null, function ($q, $s) {
                 $q->where('name', 'like', "%{$s}%");
@@ -275,7 +281,13 @@ class LicenseService
         return License::expiringSoon($days)
             ->active()
             ->when($user && !$user->hasRole(['admin', 'super_admin']), function ($q) use ($user) {
-                $q->whereIn('vendor_id', $user->accessibleVendors()->pluck('vendors.id'));
+                $assignedIds = $user->accessibleVendors()->pluck('vendors.id')->toArray();
+                $q->where(function ($sub) use ($user, $assignedIds) {
+                    $sub->whereIn('vendor_id', $assignedIds);
+                    if (!empty($user->company)) {
+                        $sub->orWhereHas('vendor', fn($vq) => $vq->where('company', $user->company));
+                    }
+                });
             })
             ->with('server')
             ->get();

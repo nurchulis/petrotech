@@ -9,7 +9,7 @@ class LicensePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin']) || $user->accessibleVendors()->exists();
+        return $user->hasRole(['admin', 'super_admin']) || $user->canAccessLicenses();
     }
 
     public function view(User $user, License $license): bool

@@ -94,14 +94,45 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function canAccessLicenses(): bool
+    {
+        if ($this->hasRole(['admin', 'super_admin'])) {
+            return true;
+        }
+
+        if ($this->accessibleVendors()->exists()) {
+            return true;
+        }
+
+        if (!empty($this->company)) {
+            return Vendor::where('company', $this->company)->exists();
+        }
+
+        return false;
+    }
+
     public function canAccessVendor(int|Vendor $vendor): bool
     {
         if ($this->hasRole(['admin', 'super_admin'])) {
             return true;
         }
 
-        $vendorId = $vendor instanceof Vendor ? $vendor->id : $vendor;
-        return $this->accessibleVendors()->where('vendors.id', $vendorId)->exists();
+        $vendorModel = $vendor instanceof Vendor ? $vendor : Vendor::find($vendor);
+        if (!$vendorModel) {
+            return false;
+        }
+
+        // Check assigned in pivot table
+        if ($this->accessibleVendors()->where('vendors.id', $vendorModel->id)->exists()) {
+            return true;
+        }
+
+        // Check company match
+        if (!empty($this->company) && !empty($vendorModel->company) && strcasecmp(trim($this->company), trim($vendorModel->company)) === 0) {
+            return true;
+        }
+
+        return false;
     }
 
     public function accessibleLicenses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
