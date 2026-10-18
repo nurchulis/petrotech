@@ -58,13 +58,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/licenses/access/revoke-all', [LicenseController::class, 'revokeAllAccess'])->name('licenses.access.revoke_all');
             Route::post('/licenses/kick', [LicenseController::class, 'kickUser'])->name('licenses.kick');
             Route::get('/licenses/{license}', [LicenseController::class, 'show'])->name('licenses.show');
+
+            // Vendor store: accessible to all license-enabled users (controller enforces company lock for 'user' role)
+            Route::post('/vendors', [\App\Http\Controllers\Admin\VendorController::class, 'store'])->name('vendors.store');
         });
 
         // ── Admin-only routes ─────────────────────────────────────────────────
         Route::middleware('role:admin|super_admin')->prefix('admin')->name('admin.')->group(function () {
 
             // Vendor & License Management CRUD (Admin only)
-            Route::post('/vendors', [\App\Http\Controllers\Admin\VendorController::class, 'store'])->name('vendors.store');
             Route::put('/vendors/{vendor}', [\App\Http\Controllers\Admin\VendorController::class, 'update'])->name('vendors.update');
             Route::get('/licenses/create', [LicenseController::class, 'create'])->name('licenses.create');
             Route::post('/licenses', [LicenseController::class, 'store'])->name('licenses.store');
