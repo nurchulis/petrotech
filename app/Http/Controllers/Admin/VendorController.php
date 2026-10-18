@@ -20,6 +20,12 @@ class VendorController extends Controller
             'status' => 'required|in:enable,disable',
         ]);
 
+        // Security: non-admin users can only set their own company
+        if (!auth()->user()->hasRole(['admin', 'super_admin'])) {
+            $data['company'] = auth()->user()->company;
+            $data['status']  = 'disable'; // user-submitted vendors start as disabled
+        }
+
         Vendor::create($data);
 
         return back()->with('success', 'Vendor added successfully.');

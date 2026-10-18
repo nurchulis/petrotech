@@ -20,10 +20,10 @@
             <h2 class="mb-0" style="color:#1a3c6b">License Management</h2>
             <small class="text-muted">Manage petrotechnical software licenses</small>
         </div>
-        @can('create', \App\Models\License::class)
+        @if(auth()->user()->canAccessLicenses())
             <button class="btn" style="background:#1a3c6b;color:#fff" data-bs-toggle="modal"
                 data-bs-target="#createVendorModal">+ Add Vendor</button>
-        @endcan
+        @endif
     </div>
 
     @php
@@ -128,8 +128,18 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Company</label>
-                            <input type="text" class="form-control @error('company') is-invalid @enderror" name="company"
-                                placeholder="e.g. SLB (Schlumberger)">
+                            @if(auth()->user()->hasRole(['admin', 'super_admin']))
+                                {{-- Admin & Super Admin: free text --}}
+                                <input type="text" class="form-control @error('company') is-invalid @enderror"
+                                    name="company" placeholder="e.g. SLB (Schlumberger)"
+                                    value="{{ old('company') }}">
+                            @else
+                                {{-- Regular user: locked to their own company --}}
+                                <input type="text" class="form-control bg-light" name="company"
+                                    value="{{ auth()->user()->company }}"
+                                    readonly title="Company is set to your assigned company and cannot be changed.">
+                                <small class="text-muted">Company is automatically set to your assigned company.</small>
+                            @endif
                             @error('company')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
