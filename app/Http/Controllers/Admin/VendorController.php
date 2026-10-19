@@ -10,11 +10,6 @@ class VendorController extends Controller
 {
     public function store(Request $request)
     {
-        // Only users with license access can add vendors
-        if (!auth()->user()->canAccessLicenses()) {
-            abort(403, 'You do not have permission to add vendors.');
-        }
-
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', 'regex:/^[\pL\pN\s\-\.\@\(\)_]+$/u', 'unique:vendors,name'],
             'company' => ['nullable', 'string', 'max:255'],
@@ -28,7 +23,7 @@ class VendorController extends Controller
         // Security: non-admin users can only set their own company
         if (!auth()->user()->hasRole(['admin', 'super_admin'])) {
             $data['company'] = auth()->user()->company;
-            $data['status']  = 'disable'; // user-submitted vendors start as disabled
+            $data['status'] = 'disable'; // user-submitted vendors start as disabled
         }
 
         Vendor::create($data);
