@@ -241,7 +241,9 @@ class LicenseService
 
         if ($range === 'hourly' && $date) {
             $query->whereDate('recorded_at', $date);
-            $trunc = "date_trunc('hour', recorded_at)";
+            // SQL Server: group by hour
+            $selectRaw   = "CAST(FORMAT(recorded_at, 'yyyy-MM-dd HH:00:00') AS DATETIME) as time_bucket, MAX(seats_used) as max_usage, AVG(seats_used) as avg_usage";
+            $groupByRaw  = "FORMAT(recorded_at, 'yyyy-MM-dd HH:00:00')";
         } else {
             if ($startDate) {
                 $query->where('recorded_at', '>=', $startDate . ' 00:00:00');
@@ -250,28 +252,38 @@ class LicenseService
                 $query->where('recorded_at', '<=', $endDate . ' 23:59:59');
             }
 
-            $trunc = match ($range) {
-                'weekly' => "date_trunc('week', recorded_at)",
-                'monthly' => "date_trunc('month', recorded_at)",
-                default => "date_trunc('day', recorded_at)", // daily
+            // SQL Server compatible grouping (no date_trunc)
+            [$selectRaw, $groupByRaw] = match ($range) {
+                'weekly'  => [
+                    "CAST(DATEADD(day, -(DATEPART(weekday, recorded_at) - 1), CAST(recorded_at AS DATE)) AS DATETIME) as time_bucket, MAX(seats_used) as max_usage, AVG(seats_used) as avg_usage",
+                    "DATEADD(day, -(DATEPART(weekday, recorded_at) - 1), CAST(recorded_at AS DATE))",
+                ],
+                'monthly' => [
+                    "CAST(FORMAT(recorded_at, 'yyyy-MM-01') AS DATETIME) as time_bucket, MAX(seats_used) as max_usage, AVG(seats_used) as avg_usage",
+                    "FORMAT(recorded_at, 'yyyy-MM-01')",
+                ],
+                default   => [ // daily
+                    "CAST(CAST(recorded_at AS DATE) AS DATETIME) as time_bucket, MAX(seats_used) as max_usage, AVG(seats_used) as avg_usage",
+                    "CAST(recorded_at AS DATE)",
+                ],
             };
         }
 
-        $metrics = $query->selectRaw("{$trunc} as time_bucket, MAX(seats_used) as max_usage, AVG(seats_used) as avg_usage")
-            ->groupBy('time_bucket')
+        $metrics = $query->selectRaw($selectRaw)
+            ->groupByRaw($groupByRaw)
             ->orderBy('time_bucket', 'asc')
             ->get();
 
         return [
             'license_name' => $license->license_name,
-            'total_seats' => $license->total_seats,
-            'data' => $metrics->map(fn($m) => [
+            'total_seats'  => $license->total_seats,
+            'data'         => $metrics->map(fn($m) => [
                 'time_bucket' => $m->time_bucket,
-                'max_usage' => (int) $m->max_usage,
-                'avg_usage' => round((float) $m->avg_usage, 2),
+                'max_usage'   => (int) $m->max_usage,
+                'avg_usage'   => round((float) $m->avg_usage, 2),
                 'utilization' => $license->total_seats > 0
                     ? round(((int) $m->max_usage / $license->total_seats) * 100, 2)
-                    : 0
+                    : 0,
             ]),
         ];
     }
