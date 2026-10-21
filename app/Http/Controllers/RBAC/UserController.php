@@ -59,6 +59,18 @@ class UserController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
+
+        // Ensure vendor_ids are strictly filtered by user company to prevent cross-company access
+        $submittedVendorIds = $request->input('vendor_ids', []);
+        if (!empty($data['company']) && !empty($submittedVendorIds)) {
+            $data['vendor_ids'] = \App\Models\Vendor::whereIn('id', $submittedVendorIds)
+                ->where('company', $data['company'])
+                ->pluck('id')
+                ->toArray();
+        } else {
+            $data['vendor_ids'] = [];
+        }
+
         $this->service->create($data);
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
@@ -111,6 +123,18 @@ class UserController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
+
+        // Ensure vendor_ids are strictly filtered by user company to prevent cross-company access
+        $submittedVendorIds = $request->input('vendor_ids', []);
+        if (!empty($data['company']) && !empty($submittedVendorIds)) {
+            $data['vendor_ids'] = \App\Models\Vendor::whereIn('id', $submittedVendorIds)
+                ->where('company', $data['company'])
+                ->pluck('id')
+                ->toArray();
+        } else {
+            $data['vendor_ids'] = [];
+        }
+
         $this->service->update($user, $data);
 
         return redirect()->route('admin.users.index')->with('success', "User '{$user->name}' updated successfully.");
@@ -133,7 +157,17 @@ class UserController extends Controller
             'vendor_ids.*' => 'integer|exists:vendors,id',
         ]);
 
-        $user->accessibleVendors()->syncWithPivotValues($data['vendor_ids'] ?? [], [
+        $vendorIds = $data['vendor_ids'] ?? [];
+        if (!empty($user->company) && !empty($vendorIds)) {
+            $vendorIds = \App\Models\Vendor::whereIn('id', $vendorIds)
+                ->where('company', $user->company)
+                ->pluck('id')
+                ->toArray();
+        } elseif (empty($user->company)) {
+            $vendorIds = [];
+        }
+
+        $user->accessibleVendors()->syncWithPivotValues($vendorIds, [
             'granted_by' => auth()->id(),
         ]);
 

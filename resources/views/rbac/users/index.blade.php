@@ -42,11 +42,11 @@
             <thead style="background:#f4f7fb">
                 <tr>
                     <th>User</th>
-                    <th>Employee ID</th>
+                    {{-- <th>Employee ID</th> --}}
                     <th>Company</th>
                     <th>Department</th>
                     <th>Roles</th>
-                    <th>License Access</th>
+                    <th>Total License Server</th>
                     <th>Status</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -63,7 +63,7 @@
                             </div>
                         </div>
                     </td>
-                    <td>{{ $user->employee_id ?? '—' }}</td>
+                    {{-- <td>{{ $user->employee_id ?? '—' }}</td> --}}
                     <td>
                         @if($user->company)
                             <span class="badge bg-blue-lt text-blue">{{ $user->company }}</span>
@@ -79,11 +79,12 @@
                     </td>
                     <td>
                         @if($user->hasRole(['admin', 'super_admin']))
-                            <span class="badge bg-green-lt text-success">All (Admin)</span>
+                            @php $totalVendors = \App\Models\Vendor::count(); @endphp
+                            <span class="badge bg-green-lt text-success fw-semibold">{{ $totalVendors }} Server</span>
+                            <div class="text-muted" style="font-size:.75rem">All Access</div>
                         @elseif($user->accessibleVendors->isNotEmpty())
-                            @foreach($user->accessibleVendors as $av)
-                                <span class="badge bg-cyan-lt text-cyan mb-1">{{ $av->name }}</span>
-                            @endforeach
+                            @php $count = $user->accessibleVendors->count(); @endphp
+                            <span class="badge bg-cyan-lt text-cyan fw-semibold">{{ $count }} Server</span>
                         @else
                             <span class="text-muted small">No Access</span>
                         @endif

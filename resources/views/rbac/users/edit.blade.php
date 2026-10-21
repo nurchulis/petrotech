@@ -48,9 +48,9 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Company</label>
-                    <input type="text" name="company" class="form-control @error('company') is-invalid @enderror"
+                    <input type="text" name="company" id="user_company" class="form-control @error('company') is-invalid @enderror"
                            value="{{ old('company', $user->company) }}" placeholder="e.g. Pertamina EP, PHE, Patra Niaga"
-                           list="company_edit_list">
+                           list="company_edit_list" autocomplete="off">
                     <datalist id="company_edit_list">
                         @foreach($existingCompanies ?? [] as $c)
                             <option value="{{ $c }}">
@@ -97,17 +97,30 @@
                 <div class="col-12">
                     <label class="form-label fw-semibold">License Management Access (Assigned Vendors)</label>
                     <small class="text-muted d-block mb-2">Assign which vendor licenses this user is allowed to view and manage in License Management.</small>
-                    <div class="row g-2">
+
+                    <div id="company-empty-alert" class="text-muted small py-2" style="{{ !empty(old('company', $user->company)) ? 'display:none;' : '' }}">
+                        No company specified. Please set user company above to assign license server.
+                    </div>
+
+                    <div id="no-matching-vendors-alert" class="text-muted small py-2" style="display:none;">
+                        No license servers found for this company.
+                    </div>
+
+                    <div class="row g-2" id="vendors-container">
                         @forelse($vendors ?? [] as $v)
                         @php
+                            $userCompany = trim(old('company', $user->company ?? ''));
+                            $vCompany = trim($v->company ?? '');
+                            $matchesCompany = !empty($userCompany) && !empty($vCompany) && strcasecmp($vCompany, $userCompany) === 0;
                             $assigned = in_array($v->id, old('vendor_ids', $user->accessibleVendors->pluck('id')->toArray()));
                         @endphp
-                        <div class="col-md-6">
+                        <div class="col-md-6 vendor-card-item" data-company="{{ strtolower($vCompany) }}" style="{{ $matchesCompany ? '' : 'display:none;' }}">
                             <div class="border rounded p-2 d-flex align-items-center justify-content-between">
                                 <div class="form-check mb-0">
-                                    <input class="form-check-input" type="checkbox" name="vendor_ids[]"
+                                    <input class="form-check-input vendor-checkbox" type="checkbox" name="vendor_ids[]"
                                         value="{{ $v->id }}" id="edit_vendor_{{ $v->id }}"
-                                        {{ $assigned ? 'checked' : '' }}>
+                                        {{ ($assigned && $matchesCompany) ? 'checked' : '' }}
+                                        {{ $matchesCompany ? '' : 'disabled' }}>
                                     <label class="form-check-label fw-bold text-dark cursor-pointer" for="edit_vendor_{{ $v->id }}">
                                         {{ $v->name }}
                                         @if($v->company)
@@ -122,7 +135,7 @@
                             </div>
                         </div>
                         @empty
-                        <div class="col-12 text-muted small">No vendors found to assign.</div>
+                        <div class="col-12 text-muted small">No vendors found on the platform.</div>
                         @endforelse
                     </div>
                 </div>
@@ -138,3 +151,65 @@
 </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const companyInput = document.getElementById('user_company');
+    const vendorItems = document.querySelectorAll('.vendor-card-item');
+    const emptyCompanyAlert = document.getElementById('company-empty-alert');
+    const noMatchingAlert = document.getElementById('no-matching-vendors-alert');
+
+    function filterVendorsByCompany() {
+        const val = (companyInput ? companyInput.value : '').trim();
+        const lowerVal = val.toLowerCase();
+
+        if (!val) {
+            if (emptyCompanyAlert) emptyCompanyAlert.style.display = '';
+            if (noMatchingAlert) noMatchingAlert.style.display = 'none';
+
+            vendorItems.forEach(item => {
+                item.style.display = 'none';
+                const cb = item.querySelector('.vendor-checkbox');
+                if (cb) {
+                    cb.checked = false;
+                    cb.disabled = true;
+                }
+            });
+            return;
+        }
+
+        if (emptyCompanyAlert) emptyCompanyAlert.style.display = 'none';
+
+        let visibleCount = 0;
+        vendorItems.forEach(item => {
+            const itemCompany = (item.dataset.company || '').trim().toLowerCase();
+            const cb = item.querySelector('.vendor-checkbox');
+
+            if (itemCompany && itemCompany === lowerVal) {
+                item.style.display = '';
+                if (cb) cb.disabled = false;
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+                if (cb) {
+                    cb.checked = false;
+                    cb.disabled = true;
+                }
+            }
+        });
+
+        if (noMatchingAlert) {
+            noMatchingAlert.style.display = (visibleCount === 0) ? '' : 'none';
+        }
+    }
+
+    if (companyInput) {
+        companyInput.addEventListener('input', filterVendorsByCompany);
+        companyInput.addEventListener('change', filterVendorsByCompany);
+        filterVendorsByCompany();
+    }
+});
+</script>
+@endpush
+

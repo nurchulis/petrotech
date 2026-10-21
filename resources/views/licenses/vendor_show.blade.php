@@ -561,7 +561,7 @@
                                                                     <i class="fab fa-linux me-1"></i> Linux
                                                                 </label>
                                                                 <div class="bg-light p-2 rounded border">
-                                                                    <code class="small text-dark fw-bold">curl -sSL https://agent-install.sh | bash</code>
+                                                                    <code class="small text-dark fw-bold">curl -sSL https://lm.patratel.co.id/agent-install.sh | bash</code>
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-6">
@@ -569,7 +569,7 @@
                                                                     <i class="fab fa-windows me-1"></i> Windows
                                                                 </label>
                                                                 <div class="bg-light p-2 rounded border">
-                                                                    <code class="small text-dark fw-bold text-break">Invoke-WebRequest -Uri https://agent-install.ps1 -OutFile install.ps1; ./install.ps1</code>
+                                                                    <code class="small text-dark fw-bold text-break">Invoke-WebRequest -Uri https://lm.patratel.co.id/agent-install.ps1 -OutFile install.ps1; ./install.ps1</code>
                                                                 </div>
                                                             </div>
                                                         </div>
