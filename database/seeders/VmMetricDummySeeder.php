@@ -57,8 +57,8 @@ class VmMetricDummySeeder extends Seeder
                     'recorded_at' => $cursor->toDateTimeString(),
                 ];
 
-                // insert in chunks to avoid memory bloat
-                if (count($rows) >= 500) {
+                // SQL Server max 2100 params; 9 cols × 200 rows = 1800 params (safe margin)
+                if (count($rows) >= 200) {
                     DB::table('vm_metrics')->insert($rows);
                     $rows = [];
                 }
