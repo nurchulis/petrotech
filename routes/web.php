@@ -133,8 +133,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Settings (all authenticated users) ───────────────────────────────
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    // [DAST-SCAN] updateProfile & updatePassword disabled — DAST bisa ubah email/password user.
-    // Re-enable setelah DAST scan selesai.
-    // Route::patch('/settings/profile', [SettingsController::class , 'updateProfile'])->name('settings.profile');
-    // Route::put('/settings/password', [SettingsController::class , 'updatePassword'])->name('settings.password');
+    Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
 });
