@@ -133,8 +133,14 @@
                             </a>
                         </li>
 
+                        @php
+                            $showOperations = config('menu.vdi_access', true) || config('menu.ticketing', true) || (config('menu.license_management', true) && !auth()->user()->hasRole(['admin', 'super_admin']) && auth()->user()->canAccessLicenses());
+                        @endphp
+                        @if($showOperations)
                         <li class="nav-item"><span class="nav-section-title">Operations</span></li>
+                        @endif
 
+                        @if(config('menu.vdi_access', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('vdi.*') ? 'active' : '' }}"
                                 href="{{ route('vdi.index') }}">
@@ -148,7 +154,9 @@
                                 <span class="nav-link-title">VDI Access</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(config('menu.ticketing', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('tickets.*') ? 'active' : '' }}"
                                 href="{{ route('tickets.index') }}">
@@ -162,9 +170,10 @@
                                 <span class="nav-link-title">Ticketing</span>
                             </a>
                         </li>
+                        @endif
 
                         {{-- License Management for regular Users under Operations --}}
-                        @if(!auth()->user()->hasRole(['admin', 'super_admin']) && auth()->user()->canAccessLicenses())
+                        @if(config('menu.license_management', true) && !auth()->user()->hasRole(['admin', 'super_admin']) && auth()->user()->canAccessLicenses())
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}"
                                 href="{{ route('admin.licenses.index') }}">
@@ -181,8 +190,14 @@
                         @endif
 
                         @role(['admin', 'super_admin'])
+                        @php
+                            $showAdmin = config('menu.license_management', true) || config('menu.vm_monitoring', true) || config('menu.vm_management', true) || config('menu.storage_monitor', true) || config('menu.analytics', true) || config('menu.group_management', true);
+                        @endphp
+                        @if($showAdmin)
                         <li class="nav-item"><span class="nav-section-title">Administration</span></li>
+                        @endif
 
+                        @if(config('menu.license_management', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}"
                                 href="{{ route('admin.licenses.index') }}">
@@ -196,7 +211,9 @@
                                 <span class="nav-link-title">License Management</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(config('menu.vm_monitoring', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.vm-monitoring.*') ? 'active' : '' }}"
                                 href="{{ route('admin.vm-monitoring.index') }}">
@@ -209,7 +226,9 @@
                                 <span class="nav-link-title">VM Monitoring</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(config('menu.vm_management', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.vm-management.*') ? 'active' : '' }}"
                                 href="{{ route('admin.vm-management.index') }}">
@@ -225,7 +244,9 @@
                                 <span class="nav-link-title">VM Management</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(config('menu.storage_monitor', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.storage.*') ? 'active' : '' }}"
                                 href="{{ route('admin.storage.index') }}">
@@ -240,7 +261,9 @@
                                 <span class="nav-link-title">Storage Monitor</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(config('menu.analytics', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}"
                                 href="{{ route('admin.analytics.index') }}">
@@ -255,7 +278,9 @@
                                 <span class="nav-link-title">Analytics &amp; Reports</span>
                             </a>
                         </li>
+                        @endif
 
+                        @if(config('menu.group_management', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
                                 href="{{ route('admin.groups.index') }}">
@@ -270,13 +295,13 @@
                                 <span class="nav-link-title">Group Management</span>
                             </a>
                         </li>
-
-
+                        @endif
                         @endrole
 
                         @role(['admin', 'super_admin'])
                         <li class="nav-item"><span class="nav-section-title">System</span></li>
 
+                        @if(config('menu.user_management', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
                                 href="{{ route('admin.users.index') }}">
@@ -291,9 +316,11 @@
                                 <span class="nav-link-title">User Management</span>
                             </a>
                         </li>
+                        @endif
                         @endrole
 
                         @role('super_admin')
+                        @if(config('menu.role_management', true))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"
                                 href="{{ route('admin.roles.index') }}">
@@ -306,6 +333,7 @@
                                 <span class="nav-link-title">Role Management</span>
                             </a>
                         </li>
+                        @endif
 
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}"

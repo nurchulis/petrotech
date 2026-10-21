@@ -123,5 +123,124 @@
             </div>
         </div>
     </div>
+
+    @role('super_admin')
+    {{-- Menu Visibility Configuration (.env) --}}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm mt-2">
+            <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="card-title mb-0" style="color:#1a3c6b">🧭 Sidebar Menu Visibility Configuration</h4>
+                    <small class="text-muted">Konfigurasi show / hide menu navigasi platform. Nilai akan disimpan langsung ke file <code>.env</code> tanpa merubah database.</small>
+                </div>
+                <span class="badge bg-purple-lt text-purple fw-bold">.env Config (Super Admin Only)</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('settings.menu') }}">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="row g-4">
+                        {{-- Operations Section --}}
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100 bg-light-subtle">
+                                <h6 class="text-uppercase fw-bold text-muted mb-3" style="letter-spacing: 0.05em;">
+                                    <i class="fas fa-tasks me-1 text-primary"></i> Operations
+                                </h6>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="vdi_access" id="menu_vdi_access" value="1"
+                                        {{ config('menu.vdi_access', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_vdi_access">VDI Access</label>
+                                    <div class="text-muted small"><code>MENU_VDI_ACCESS</code></div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="ticketing" id="menu_ticketing" value="1"
+                                        {{ config('menu.ticketing', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_ticketing">Ticketing</label>
+                                    <div class="text-muted small"><code>MENU_TICKETING</code></div>
+                                </div>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="license_management" id="menu_license_management" value="1"
+                                        {{ config('menu.license_management', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_license_management">License Management</label>
+                                    <div class="text-muted small"><code>MENU_LICENSE_MANAGEMENT</code></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Administration Section --}}
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100 bg-light-subtle">
+                                <h6 class="text-uppercase fw-bold text-muted mb-3" style="letter-spacing: 0.05em;">
+                                    <i class="fas fa-server me-1 text-primary"></i> Administration
+                                </h6>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="vm_monitoring" id="menu_vm_monitoring" value="1"
+                                        {{ config('menu.vm_monitoring', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_vm_monitoring">VM Monitoring</label>
+                                    <div class="text-muted small"><code>MENU_VM_MONITORING</code></div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="vm_management" id="menu_vm_management" value="1"
+                                        {{ config('menu.vm_management', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_vm_management">VM Management</label>
+                                    <div class="text-muted small"><code>MENU_VM_MANAGEMENT</code></div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="storage_monitor" id="menu_storage_monitor" value="1"
+                                        {{ config('menu.storage_monitor', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_storage_monitor">Storage Monitor</label>
+                                    <div class="text-muted small"><code>MENU_STORAGE_MONITOR</code></div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="analytics" id="menu_analytics" value="1"
+                                        {{ config('menu.analytics', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_analytics">Analytics &amp; Reports</label>
+                                    <div class="text-muted small"><code>MENU_ANALYTICS</code></div>
+                                </div>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="group_management" id="menu_group_management" value="1"
+                                        {{ config('menu.group_management', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_group_management">Group Management</label>
+                                    <div class="text-muted small"><code>MENU_GROUP_MANAGEMENT</code></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- System Section --}}
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100 bg-light-subtle">
+                                <h6 class="text-uppercase fw-bold text-muted mb-3" style="letter-spacing: 0.05em;">
+                                    <i class="fas fa-cogs me-1 text-primary"></i> System
+                                </h6>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="user_management" id="menu_user_management" value="1"
+                                        {{ config('menu.user_management', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_user_management">User Management</label>
+                                    <div class="text-muted small"><code>MENU_USER_MANAGEMENT</code></div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="role_management" id="menu_role_management" value="1"
+                                        {{ config('menu.role_management', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="menu_role_management">Role Management</label>
+                                    <div class="text-muted small"><code>MENU_ROLE_MANAGEMENT</code></div>
+                                </div>
+                                <div class="p-2 rounded bg-white border text-muted small">
+                                    <i class="fas fa-info-circle me-1 text-primary"></i> <strong>Dashboard</strong> dan <strong>Settings</strong> bersifat core dan akan selalu tampil untuk role yang berhak.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-2 border-top d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" style="background:#1a3c6b">
+                            <i class="fas fa-save me-1"></i> Save Menu Configuration (.env)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endrole
 </div>
 @endsection
