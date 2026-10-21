@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -65,12 +66,10 @@ class SettingsController extends Controller
 
         $this->updateEnvFile($menus);
 
-        foreach ($menus as $envKey => $boolVal) {
-            $configKey = 'menu.' . strtolower(str_replace('MENU_', '', $envKey));
-            config([$configKey => $boolVal]);
-        }
+        // Clear config cache so .env changes are picked up immediately
+        Artisan::call('config:clear');
 
-        return back()->with('success', 'Menu visibility configuration updated in .env successfully.');
+        return back()->with('success', 'Menu visibility updated successfully.');
     }
 
     protected function updateEnvFile(array $data): void
