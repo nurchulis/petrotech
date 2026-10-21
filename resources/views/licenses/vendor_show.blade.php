@@ -135,10 +135,23 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3">
-                            <label class="form-check form-switch mb-0" style="cursor: pointer;" title="Toggle Auto-Refresh">
-                                <input class="form-check-input" type="checkbox" id="liveSyncToggle" checked>
-                                <span class="form-check-label text-muted small fw-bold">Live Auto-Refresh</span>
-                            </label>
+                            <div class="d-flex align-items-center gap-2 bg-white px-2 py-1 rounded border shadow-none">
+                                <label class="form-check form-switch mb-0" style="cursor: pointer;" title="Toggle Auto-Refresh">
+                                    <input class="form-check-input" type="checkbox" id="liveSyncToggle" checked>
+                                    <span class="form-check-label text-muted small fw-bold text-nowrap">Auto-Refresh</span>
+                                </label>
+                                <span class="text-muted opacity-50" style="font-size:0.75rem;">•</span>
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="fas fa-history text-muted" style="font-size:0.7rem;"></i>
+                                    <select id="liveSyncIntervalSelect" class="form-select form-select-sm py-0 px-1 border-0 bg-transparent text-dark fw-bold" style="width: auto; cursor: pointer; font-size: 0.78rem; box-shadow: none;" title="Pilih interval refresh">
+                                        <option value="5000">5s</option>
+                                        <option value="10000" selected>10s</option>
+                                        <option value="15000">15s</option>
+                                        <option value="30000">30s</option>
+                                        <option value="60000">60s</option>
+                                    </select>
+                                </div>
+                            </div>
                             
                             <div class="d-flex gap-2">
                             @can('create', \App\Models\License::class)
@@ -280,9 +293,9 @@
                             <div class="card-body p-2">
                                 @forelse($features as $feature)
                                     @php
-                                        $featureUsed = $feature->used_seats;
                                         $featureTotal = $feature->total_seats;
-                                        $featurePercent = $featureTotal > 0 ? ($featureUsed / $featureTotal) * 100 : 0;
+                                        $featureUsed = min($feature->used_seats, $featureTotal);
+                                        $featurePercent = $featureTotal > 0 ? min(($featureUsed / $featureTotal) * 100, 100) : 0;
                                         $featureColor = $featurePercent > 85 ? 'bg-danger' : ($featurePercent >= 60 ? 'bg-warning' : 'bg-success');
                                     @endphp
                                     <div class="row g-2 align-items-center py-2 border-bottom small">
@@ -384,10 +397,10 @@
                                             <td data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">{{ $f->total_seats }} seats</td>
                                             <td style="width: 250px;" data-bs-toggle="collapse" data-bs-target="#details-{{ $f->id }}">
                                                 @php
-                                                    $usage = $f->used_seats;
-                                                    $percent = $f->total_seats > 0 ? ($usage / $f->total_seats) * 100 : 0;
+                                                    $usage = min($f->used_seats, $f->total_seats);
+                                                    $percent = $f->total_seats > 0 ? min(($usage / $f->total_seats) * 100, 100) : 0;
                                                     $colorClass = $percent > 90 ? 'bg-danger' : ($percent > 70 ? 'bg-warning' : 'bg-success');
-                                                    $barWidth = min($percent, 100);
+                                                    $barWidth = $percent;
                                                 @endphp
                                                 <div class="d-flex align-items-center">
                                                     <div class="progress progress-xs w-full me-2" data-bs-toggle="tooltip"
@@ -1694,17 +1707,51 @@
             let liveSyncInterval = null;
             let isSyncing = false;
 
-            function startLiveSync() {
+            function getLiveSyncConfig() {
+                const savedInterval = parseInt(localStorage.getItem('vendor_live_sync_interval') || '10000', 10);
+                const savedEnabled = localStorage.getItem('vendor_live_sync_enabled');
+                return {
+                    interval: (!isNaN(savedInterval) && savedInterval >= 2000) ? savedInterval : 10000,
+                    enabled: savedEnabled !== null ? (savedEnabled === 'true') : true
+                };
+            }
+
+            function syncControlsFromStorage() {
+                const config = getLiveSyncConfig();
                 const toggle = document.getElementById('liveSyncToggle');
-                const indicator = document.getElementById('live-sync-indicator');
-                
-                if (liveSyncInterval) clearInterval(liveSyncInterval);
+                const select = document.getElementById('liveSyncIntervalSelect');
+
+                if (toggle) {
+                    toggle.checked = config.enabled;
+                }
+                if (select) {
+                    select.value = String(config.interval);
+                    select.disabled = !config.enabled;
+                }
+            }
+
+            function startLiveSync() {
+                if (liveSyncInterval) {
+                    clearInterval(liveSyncInterval);
+                    liveSyncInterval = null;
+                }
+
+                syncControlsFromStorage();
+                const config = getLiveSyncConfig();
+
+                if (!config.enabled) {
+                    const indicator = document.getElementById('live-sync-indicator');
+                    if (indicator) indicator.style.display = 'none';
+                    return;
+                }
 
                 liveSyncInterval = setInterval(async () => {
+                    const toggle = document.getElementById('liveSyncToggle');
                     if (!toggle || !toggle.checked || isSyncing) return;
                     
                     isSyncing = true;
-                    indicator.style.display = 'inline-flex';
+                    const indicator = document.getElementById('live-sync-indicator');
+                    if (indicator) indicator.style.display = 'inline-flex';
                     
                     const container = document.getElementById('vendor-dashboard-content');
                     if (container) {
@@ -1761,6 +1808,9 @@
                             // Replace HTML
                             container.innerHTML = newContainer.innerHTML;
                             
+                            // Restore toggle and select states from localStorage into the newly rendered HTML
+                            syncControlsFromStorage();
+
                             // Re-init Javascript components for the newly replaced elements
                             window.initDashboardJS();
                         }
@@ -1769,22 +1819,26 @@
                     } finally {
                         if (container) container.style.opacity = '1';
                         setTimeout(() => {
-                            if (!isSyncing) indicator.style.display = 'none';
+                            if (!isSyncing && indicator) indicator.style.display = 'none';
                         }, 2000);
                         isSyncing = false;
                     }
-                }, 10000); // 10 seconds
+                }, config.interval);
             }
 
-            // Listen to toggle changes
+            // Listen to toggle and interval changes
             document.addEventListener('change', function(e) {
                 if (e.target && e.target.id === 'liveSyncToggle') {
-                    if (e.target.checked) {
-                        startLiveSync();
-                    } else {
-                        if (liveSyncInterval) clearInterval(liveSyncInterval);
-                        document.getElementById('live-sync-indicator').style.display = 'none';
-                    }
+                    const isChecked = e.target.checked;
+                    localStorage.setItem('vendor_live_sync_enabled', isChecked ? 'true' : 'false');
+                    const select = document.getElementById('liveSyncIntervalSelect');
+                    if (select) select.disabled = !isChecked;
+                    startLiveSync();
+                }
+                if (e.target && e.target.id === 'liveSyncIntervalSelect') {
+                    const newInterval = e.target.value;
+                    localStorage.setItem('vendor_live_sync_interval', newInterval);
+                    startLiveSync();
                 }
             });
 

@@ -137,7 +137,7 @@ class DemoDataSeeder extends Seeder
                 default => null,
             };
             $currentServer = ($licData['vendor'] === 'schlumb') ? $serverJKT : $serverBPN;
-            $licData['used_seats'] = rand(0, $licData['total_seats'] + 2);
+            $licData['used_seats'] = rand(0, $licData['total_seats']);
             $vendorName = $licData['vendor'];
             unset($licData['vendor']);
             $license = License::updateOrCreate(
@@ -275,7 +275,7 @@ class DemoDataSeeder extends Seeder
                     'expiry_date' => Carbon::create(2030, 1, 1),
                     'license_server_id' => $currentServer->id,
                     'created_by' => $admin->id,
-                    'used_seats' => rand(0, $feat['total_seats'] + 1),
+                    'used_seats' => rand(0, $feat['total_seats']),
                 ])
             );
 
