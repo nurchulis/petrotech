@@ -83,6 +83,39 @@
                 box-shadow: 0 0 0 6px rgba(47, 179, 68, 0);
             }
         }
+
+        /* ── Sidebar P Logo (matches login page) ─── */
+        .sidebar-logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #2563eb 0%, #1a3c6b 60%, #0f2545 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 4px 14px rgba(26, 60, 107, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo-icon::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            width: 36px;
+            height: 36px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.13) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .sidebar-logo-icon svg {
+            position: relative;
+            z-index: 1;
+        }
     </style>
     @stack('styles')
 </head>
@@ -97,21 +130,20 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <a href="{{ route('dashboard') }}" class="navbar-brand d-flex justify-content-center py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 42 42" fill="none">
-                        <rect x="2" y="2" width="38" height="38" rx="10" fill="#1a3c6b" />
-                        <rect x="2" y="2" width="38" height="38" rx="10" fill="url(#grad_sidebar_p)"
-                            fill-opacity="0.8" />
-                        <path
-                            d="M14 12h8.5c4.14 0 7.5 3.36 7.5 7.5S26.64 27 22.5 27H18v5h-4V12zm4 4v7h4.5c1.93 0 3.5-1.57 3.5-3.5S24.43 16 22.5 16H18z"
-                            fill="#ffffff" />
-                        <defs>
-                            <linearGradient id="grad_sidebar_p" x1="2" y1="2" x2="40" y2="40"
-                                gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#4a7fa5" />
-                                <stop offset="1" stop-color="#1a3c6b" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
+                    <div class="sidebar-logo-icon">
+                        <svg width="28" height="28" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="sp_grad" x1="10" y1="8" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#ffffff"/>
+                                    <stop offset="100%" stop-color="#b8d4f8"/>
+                                </linearGradient>
+                            </defs>
+                            <line x1="13" y1="9" x2="13" y2="35" stroke="url(#sp_grad)" stroke-width="5.5" stroke-linecap="round"/>
+                            <path d="M13 9 L24 9 C31 9 35 13.5 35 19.5 C35 25.5 31 30 24 30 L13 30"
+                                stroke="url(#sp_grad)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <circle cx="33" cy="34" r="3" fill="#60a5fa" opacity="0.85"/>
+                        </svg>
+                    </div>
                 </a>
 
                 <div class="collapse navbar-collapse" id="sidebar-menu">

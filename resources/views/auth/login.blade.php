@@ -18,6 +18,45 @@
     body {
       font-feature-settings: "cv03", "cv04", "cv11";
     }
+
+    .logo-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: -2.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #2563eb 0%, #1a3c6b 60%, #0f2545 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 8px 24px rgba(26, 60, 107, 0.35),
+        0 2px 6px rgba(26, 60, 107, 0.2),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon::before {
+      content: '';
+      position: absolute;
+      top: -18px;
+      left: -18px;
+      width: 60px;
+      height: 60px;
+      background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .logo-icon svg {
+      position: relative;
+      z-index: 1;
+    }
   </style>
 </head>
 
@@ -40,24 +79,29 @@
     {{-- Form on the right --}}
     <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
       <div class="container container-tight my-5 px-lg-5">
-        <div class="text-center mb-5 pb-3 d-flex justify-content-center align-items-center gap-2"
-          style="margin-top: -2.5rem;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 42 42" fill="none">
-            <rect x="2" y="2" width="38" height="38" rx="10" fill="#1a3c6b" />
-            <rect x="2" y="2" width="38" height="38" rx="10" fill="url(#grad_p)" fill-opacity="0.8" />
-            <path
-              d="M14 12h8.5c4.14 0 7.5 3.36 7.5 7.5S26.64 27 22.5 27H18v5h-4V12zm4 4v7h4.5c1.93 0 3.5-1.57 3.5-3.5S24.43 16 22.5 16H18z"
-              fill="#ffffff" />
-            <defs>
-              <linearGradient id="grad_p" x1="2" y1="2" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#4a7fa5" />
-                <stop offset="1" stop-color="#1a3c6b" />
-              </linearGradient>
-            </defs>
-          </svg>
+
+        {{-- Premium P Logo --}}
+        <div class="logo-wrap">
+          <div class="logo-icon">
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="p_letter" x1="10" y1="8" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#ffffff"/>
+                  <stop offset="100%" stop-color="#b8d4f8"/>
+                </linearGradient>
+              </defs>
+              {{-- Vertical stem --}}
+              <line x1="13" y1="9" x2="13" y2="35" stroke="url(#p_letter)" stroke-width="5.5" stroke-linecap="round"/>
+              {{-- Bowl of P --}}
+              <path d="M13 9 L24 9 C31 9 35 13.5 35 19.5 C35 25.5 31 30 24 30 L13 30"
+                stroke="url(#p_letter)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              {{-- Accent dot --}}
+              <circle cx="33" cy="34" r="3" fill="#60a5fa" opacity="0.85"/>
+            </svg>
+          </div>
         </div>
 
-        <div class="text-center mb-4" style="margin-top: 30px;">
+        <div class="text-center mb-4">
           <h2 class="h2 text-center mb-4" style="color: #1a3c6b;">Login to your account</h2>
         </div>
 
